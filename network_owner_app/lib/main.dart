@@ -105,8 +105,14 @@ class _SaiberWifiAppState extends ConsumerState<SaiberWifiApp>
     LocalNotificationService.onTap = _onNotificationTap;
     ApiClient.onSuspended = _showSuspendedScreen;
     ApiClient.onUnauthorized = _handleUnauthorized;
-    _setupFcmListeners();
-    _checkInitialMessage();
+    // Guarded: staging build may run without a registered Firebase app,
+    // in which case FirebaseMessaging throws on access.
+    try {
+      _setupFcmListeners();
+      _checkInitialMessage();
+    } catch (e) {
+      debugPrint('[FCM] listeners skipped: $e');
+    }
   }
 
   void _setupFcmListeners() {

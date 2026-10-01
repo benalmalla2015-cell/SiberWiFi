@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.saiberwifi.customerapp"
+        applicationId = "com.saiberwifi.customerapp.staging"
         minSdk = 24
         targetSdk = 36
         versionCode = flutter.versionCode

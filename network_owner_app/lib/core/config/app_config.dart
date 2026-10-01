@@ -1,8 +1,8 @@
 class AppConfig {
-  static const String baseUrl = 'https://saiberwifi.net/api';
-  static const String appName = 'سايبر WiFi';
+  static const String baseUrl = 'https://staging.saiberwifi.net/api';
+  static const String appName = 'سايبر WiFi تجريبي';
   static const String appType = 'network_owner_app';
-  static const String appVersion = '1.0.0+1';
+  static const String appVersion = '2.0.0-staging';
 
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 30);

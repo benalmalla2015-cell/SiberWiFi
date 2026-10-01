@@ -14,7 +14,7 @@
         tools:ignore="QueryAllPackagesPermission"/>
 
     <application
-        android:label="سايبر WiFi"
+        android:label="سايبر WiFi تجريبي"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
