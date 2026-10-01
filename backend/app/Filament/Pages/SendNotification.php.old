@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Models\User;
+use App\Services\NotificationService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Str;
+
+class SendNotification extends Page
+{
+    use InteractsWithForms;
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-paper-airplane';
+    protected static ?string $navigationLabel = 'إرسال إشعار';
+    protected static string|\UnitEnum|null $navigationGroup = 'الإشعارات';
+    protected static ?int $navigationSort = 100;
+    protected string $view = 'filament.pages.send-notification';
+
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('title')
+                    ->label('عنوان الإشعار')
+                    ->required()
+                    ->maxLength(255),
+
+                Textarea::make('body')
+                    ->label('نص الإشعار')
+                    ->required()
+                    ->rows(4),
+
+                FileUpload::make('image')
+                    ->label('صورة الإشعار (اختياري)')
+                    ->image()
+                    ->disk('public')
+                    ->directory('notification_images')
+                    ->nullable(),
+
+                Select::make('target')
+                    ->label('تطبيق المستهدفين')
+                    ->options([
+                        'customer_app'       => 'تطبيق العملاء',
+                        'network_owner_app'  => 'تطبيق أصحاب الشبكات',
+                        'all'                => 'الكل',
+                    ])
+                    ->required()
+                    ->default('customer_app'),
+            ])
+            ->statePath('data');
+    }
+
+    public function send(): void
+    {
+        $data = $this->form->getState()['data'] ?? [];
+
+        $title  = $data['title'] ?? '';
+        $body   = $data['body'] ?? '';
+        $target = $data['target'] ?? 'customer_app';
+        $image  = $data['image'] ?? null;
+
+        $imageUrl = $image ? asset('storage/' . $image) : null;
+
+        $query = User::query()
+            ->where('is_active', true)
+            ->whereHas('fcmTokens', fn ($q) => $q->where('is_active', true));
+
+        if ($target === 'customer_app') {
+            $query->where('type', 'customer');
+        } elseif ($target === 'network_owner_app') {
+            $query->where('type', 'network_owner');
+        }
+
+        $count = 0;
+        $service = app(NotificationService::class);
+
+        foreach ($query->cursor() as $user) {
+            // Create in-app notification
+            DatabaseNotification::create([
+                'id'            => (string) Str::uuid(),
+                'type'          => 'App\\Notifications\\GeneralNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $user->id,
+                'data'          => json_encode([
+                    'title' => $title,
+                    'body'  => $body,
+                    'type'  => $target,
+                    'image' => $imageUrl,
+                ]),
+                'read_at'       => null,
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
+
+            $service->send($user, $title, $body, [
+                'type'  => $target,
+                'image' => $imageUrl,
+            ], $imageUrl);
+
+            $count++;
+        }
+
+        $this->form->fill();
+        $this->dispatch('notify', message: "تم إرسال الإشعار إلى {$count} مستخدم");
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            Action::make('send')
+                ->label('إرسال الإشعار')
+                ->action('send'),
+        ];
+    }
+}

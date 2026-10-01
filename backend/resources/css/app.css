@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* --------------------------------------------------------------------------
+   Light / dark mode base overrides
+   -------------------------------------------------------------------------- */
+
+/* Light mode: white/light background with dark text */
+html.fi,
+html.fi body {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+/* Ensure main layout containers are white in light mode without overriding dark mode */
+html.fi:not(.dark) .fi-layout,
+html.fi:not(.dark) .fi-main-ctn,
+html.fi:not(.dark) .fi-main {
+    background-color: #ffffff;
+}
+
+/* Dark mode: keep Filament's dark palette but force readable text */
+html.fi.dark,
+html.fi.dark body {
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Fix dark-mode filter / select / dropdown text colors
+   -------------------------------------------------------------------------- */
+
+html.fi.dark .fi-fo-select,
+html.fi.dark .fi-select-input,
+html.fi.dark .fi-fo-select-native,
+html.fi.dark [class*='fi-select-input'],
+html.fi.dark .fi-dropdown-panel,
+html.fi.dark .fi-dropdown-list,
+html.fi.dark .fi-dropdown-list-item,
+html.fi.dark .fi-dropdown-list-item-label,
+html.fi.dark .fi-ta-filters,
+html.fi.dark .fi-ta-filters-heading,
+html.fi.dark .fi-fo-field-wrp-label,
+html.fi.dark .fi-fo-field-wrp-hint,
+html.fi.dark .fi-fo-component-ctn-helper-text,
+html.fi.dark .fi-fo-checkbox-list-option-label,
+html.fi.dark .fi-fo-radio-option-label,
+html.fi.dark .fi-fo-toggle-label,
+html.fi.dark .fi-fo-toggles-option-label,
+html.fi.dark .choices__inner,
+html.fi.dark .choices__item,
+html.fi.dark .choices__list--dropdown .choices__item,
+html.fi.dark .choices__list[aria-expanded] .choices__item {
+    color: #ffffff;
+}
+
+/* RTL compatibility: ensure direction is inherited from the html dir attribute */
+html.fi[dir='rtl'],
+html.fi[dir='rtl'] body {
+    direction: rtl;
+}

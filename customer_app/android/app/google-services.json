@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "904789743936",
+    "project_id": "siberwifi-73234",
+    "storage_bucket": "siberwifi-73234.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:904789743936:android:f8d7227e513baa6cfc02a5",
+        "android_client_info": {
+          "package_name": "com.saiberwifi.customerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJQDv4E3Qi5JIiVrOA2F5VJfgto2er4vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

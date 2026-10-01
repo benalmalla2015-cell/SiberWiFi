@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "802237608908",
+    "project_id": "saiberwifi-networkapp",
+    "storage_bucket": "saiberwifi-networkapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:802237608908:android:2566fc39f60f961fdba369",
+        "android_client_info": {
+          "package_name": "com.saiberwifi.network_owner_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEUEacYsZaBcdNl4JTzbbpcwRhGMk8gU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

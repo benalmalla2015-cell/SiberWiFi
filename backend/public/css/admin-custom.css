@@ -1,0 +1,333 @@
+/* Custom dark/modern Volgh-style theme for the Siber WiFi admin panel */
+/* All rules are scoped to dark mode only — light mode keeps Filament defaults */
+
+html.dark,
+html.dark body,
+html.dark .fi-body,
+html.dark .fi-page {
+    background-color: #0b0d17 !important;
+    color: #e2e5f0;
+}
+
+html.dark .fi-page {
+    background: linear-gradient(180deg, #0b0d17 0%, #101223 100%);
+}
+
+html.dark .fi-sidebar {
+    background: #121526 !important;
+    border-inline-end: none !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark .fi-topbar {
+    background: rgba(18, 21, 38, 0.95) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Stat cards */
+html.dark .fi-wi-stats-overview-stat {
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35) !important;
+    background: linear-gradient(135deg, #1c2033 0%, #151728 100%) !important;
+    color: #fff !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Center icon inside a soft circle */
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label-ctn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+}
+
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label-ctn > svg,
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label-ctn .fi-icon {
+    order: -1 !important;
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    padding: 0.75rem !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    font-weight: 600 !important;
+}
+
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-value {
+    color: #fff !important;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    margin: 0.75rem 0 0.35rem !important;
+}
+
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-description {
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-size: 0.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    justify-content: center !important;
+}
+
+/* Sparkline chart area inside stat cards */
+html.dark .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-chart {
+    margin-top: 1rem !important;
+    width: 100% !important;
+    height: 3rem !important;
+}
+
+/* Colorful stat variants */
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 1) {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 2) {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 3) {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 4) {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 5) {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+html.dark .fi-wi-stats-overview-stat:nth-child(6n + 6) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+}
+
+/* Chart widgets */
+html.dark .fi-wi-chart {
+    background: linear-gradient(135deg, #1c2033 0%, #151728 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 1rem !important;
+    padding: 1rem !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark .fi-wi-chart canvas {
+    max-height: 320px !important;
+}
+
+html.dark .fi-wi-chart .fi-section-header-heading {
+    color: #fff !important;
+    font-weight: 700 !important;
+}
+
+/* Buttons */
+html.dark .fi-btn {
+    border-radius: 0.6rem !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+html.dark .fi-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .fi-btn-color-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+html.dark .fi-btn-color-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+html.dark .fi-btn-color-danger {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+html.dark .fi-btn-color-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+html.dark .fi-btn-color-info {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+/* Sidebar navigation items */
+html.dark .fi-sidebar-item-button,
+html.dark .fi-sidebar-group {
+    color: rgba(226, 229, 240, 0.85) !important;
+}
+
+html.dark .fi-sidebar-item-active,
+html.dark .fi-sidebar-item-active .fi-sidebar-item-button {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%) !important;
+    color: #c7c8ff !important;
+    border-radius: 0.55rem !important;
+}
+
+/* Tables and form inputs */
+html.dark .fi-ta-table,
+html.dark .fi-fo-component-ctn {
+    background: #151728 !important;
+    border-radius: 0.75rem !important;
+}
+
+html.dark .fi-ta-header-cell,
+html.dark .fi-ta-cell {
+    color: #e2e5f0 !important;
+}
+
+/* Page heading */
+html.dark .fi-header-heading {
+    color: #fff !important;
+    font-weight: 700 !important;
+}
+
+/* Toolbar / Action bar for sub-pages */
+html.dark .fi-table-toolbar {
+    background: linear-gradient(135deg, #1c2033 0%, #151728 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark .fi-table-toolbar .toolbar-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+}
+
+html.dark .fi-table-toolbar .toolbar-label {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 0.8rem !important;
+}
+
+html.dark .fi-table-toolbar select,
+html.dark .fi-table-toolbar button,
+html.dark .fi-table-toolbar .toolbar-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    border-radius: 0.5rem !important;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+}
+
+html.dark .fi-table-toolbar select:hover,
+html.dark .fi-table-toolbar button:hover,
+html.dark .fi-table-toolbar .toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark .fi-table-toolbar .toolbar-btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border-color: transparent !important;
+}
+
+html.dark .fi-table-toolbar .toolbar-btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: transparent !important;
+}
+
+html.dark .fi-table-toolbar .toolbar-sync {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.8rem !important;
+}
+
+html.dark .fi-table-toolbar .sync-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    box-shadow: 0 0 8px #10b981 !important;
+    animation: pulse 1.5s infinite !important;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Advanced filter panel (dropdown & modal) — keeps readable light panel in dark mode */
+html.dark .fi-ta-filters-dropdown,
+html.dark .fi-ta-filters-modal,
+html.dark .fi-ta-filters-before-content {
+    background: #f3e8ff !important;
+    color: #000 !important;
+    border: 1px solid #d8b4fe !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark .fi-ta-filters-dropdown label,
+html.dark .fi-ta-filters-modal label,
+html.dark .fi-ta-filters-dropdown .fi-fo-field-wrp-label,
+html.dark .fi-ta-filters-modal .fi-fo-field-wrp-label {
+    color: #000 !important;
+    font-weight: 600 !important;
+}
+
+html.dark .fi-ta-filters-dropdown input,
+html.dark .fi-ta-filters-dropdown select,
+html.dark .fi-ta-filters-dropdown textarea,
+html.dark .fi-ta-filters-modal input,
+html.dark .fi-ta-filters-modal select,
+html.dark .fi-ta-filters-modal textarea,
+html.dark .fi-ta-filters-before-content input,
+html.dark .fi-ta-filters-before-content select,
+html.dark .fi-ta-filters-before-content textarea {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #c084fc !important;
+    border-radius: 0.45rem !important;
+}
+
+html.dark .fi-ta-filters-dropdown input::placeholder,
+html.dark .fi-ta-filters-modal input::placeholder,
+html.dark .fi-ta-filters-before-content input::placeholder {
+    color: #6b21a8 !important;
+}

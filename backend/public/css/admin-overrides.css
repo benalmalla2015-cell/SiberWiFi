@@ -1,0 +1,56 @@
+/* --------------------------------------------------------------------------
+   Saiber WiFi Admin Panel Overrides
+   - Light / dark mode base tweaks
+   - Dark-mode filter / dropdown text readability
+   - RTL compatibility
+   -------------------------------------------------------------------------- */
+
+/* Light mode only: white background with dark text (never applies in dark mode) */
+html.fi:not(.dark),
+html.fi:not(.dark) body,
+html.fi:not(.dark) .fi-layout,
+html.fi:not(.dark) .fi-main-ctn,
+html.fi:not(.dark) .fi-main {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+/* Dark mode: keep Filament palette but force readable text */
+html.fi.dark,
+html.fi.dark body,
+html.fi.dark .fi-layout,
+html.fi.dark .fi-main-ctn,
+html.fi.dark .fi-main {
+    color: #ffffff;
+}
+
+/* Fix dark-mode filter / select / dropdown text colors */
+html.fi.dark .fi-fo-select,
+html.fi.dark .fi-select-input,
+html.fi.dark .fi-fo-select-native,
+html.fi.dark [class*='fi-select-input'],
+html.fi.dark .fi-dropdown-panel,
+html.fi.dark .fi-dropdown-list,
+html.fi.dark .fi-dropdown-list-item,
+html.fi.dark .fi-dropdown-list-item-label,
+html.fi.dark .fi-ta-filters,
+html.fi.dark .fi-ta-filters-heading,
+html.fi.dark .fi-fo-field-wrp-label,
+html.fi.dark .fi-fo-field-wrp-hint,
+html.fi.dark .fi-fo-component-ctn-helper-text,
+html.fi.dark .fi-fo-checkbox-list-option-label,
+html.fi.dark .fi-fo-radio-option-label,
+html.fi.dark .fi-fo-toggle-label,
+html.fi.dark .fi-fo-toggles-option-label,
+html.fi.dark .choices__inner,
+html.fi.dark .choices__item,
+html.fi.dark .choices__list--dropdown .choices__item,
+html.fi.dark .choices__list[aria-expanded] .choices__item {
+    color: #ffffff !important;
+}
+
+/* RTL compatibility */
+html.fi[dir='rtl'],
+html.fi[dir='rtl'] body {
+    direction: rtl;
+}

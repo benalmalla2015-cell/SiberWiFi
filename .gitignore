@@ -1,0 +1,61 @@
+# ===== Secrets — NEVER commit =====
+.env
+.env.*
+!.env.example
+firebase-credentials.json
+**/firebase/*.json
+**/google-services.json.bak
+*.keystore
+*.jks
+key.properties
+*.pem
+*.p12
+
+# ===== Laravel =====
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+backend/*.log
+backend/error_log
+backend/.phpunit.result.cache
+backend/composer-setup.php
+backend/composer.phar
+
+# ===== Flutter (all apps) =====
+**/build/
+**/.dart_tool/
+**/.idea/
+**/.vscode/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/android/.gradle/
+**/android/local.properties
+**/android/app/debug
+**/android/app/release
+**/.cxx/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+*.iml
+
+# ===== OS / misc =====
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+*.tmp
+hs_err_pid*.log
+
+# ===== Local notes with credentials =====
+/*.txt

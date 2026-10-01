@@ -1,0 +1,312 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\BankAccount;
+use App\Models\ChargingPoint;
+use App\Models\User;
+use App\Models\WalletLog;
+use App\Services\NotificationService;
+OLD
+);
+
+p_replace($wc,
+<<<'OLD'
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'advance_balance' => (float) $user->advance_balance,
+        ]);
+    }
+}
+OLD
+,
+<<<'NEW'
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'advance_balance' => (float) $user->advance_balance,
+        ]);
+    }
+
+    public function transfer(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone'  => 'required|string|max:20',
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $sender = $request->user();
+
+        // Only approved charging-point customers can transfer
+        $point = ChargingPoint::where('user_id', $sender->id)
+            ->where('is_active', true)
+            ->where('is_approved', true)
+            ->first();
+
+        if (!$point) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكنك تحويل الرصيد. يجب أن تكون نقطة شحن معتمدة.',
+            ], 403);
+        }
+
+        $recipient = User::where('phone', $request->phone)
+            ->where('is_active', true)
+            ->whereIn('type', ['customer'])
+            ->first();
+
+        if (!$recipient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على عميل بهذا الرقم',
+            ], 422);
+        }
+
+        if ($recipient->id === $sender->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكنك التحويل إلى نفسك',
+            ], 422);
+        }
+
+        $amount = (float) $request->amount;
+
+        if ((float) $sender->balance < $amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'رصيدك غير كافٍ لإتمام عملية التحويل',
+            ], 422);
+        }
+
+        $exchangeRate = $this->getTransferExchangeRate($sender->region_type, $recipient->region_type);
+        $convertedAmount = round($amount * $exchangeRate, 2);
+
+        \DB::transaction(function () use ($sender, $recipient, $amount, $convertedAmount, $exchangeRate) {
+            $senderBefore = (float) $sender->balance;
+            $recipientBefore = (float) $recipient->balance;
+
+            $sender->balance = $senderBefore - $amount;
+            $sender->available_balance = (float) $sender->available_balance - $amount;
+            $sender->save();
+
+            $recipient->balance = $recipientBefore + $convertedAmount;
+            $recipient->available_balance = (float) $recipient->available_balance + $convertedAmount;
+            $recipient->save();
+
+            // Sender log
+            WalletLog::create([
+                'user_id'              => $sender->id,
+                'counterparty_user_id' => $recipient->id,
+                'type'                 => 'debit',
+                'amount'               => $amount,
+                'balance_before'       => $senderBefore,
+                'balance_after'        => (float) $sender->balance,
+                'description'          => "تحويل رصيد إلى {$recipient->name} ({$recipient->phone})",
+                'reference_type'       => 'charging_point_transfer',
+                'reference_id'         => $recipient->id,
+            ]);
+
+            // Recipient log
+            WalletLog::create([
+                'user_id'              => $recipient->id,
+                'counterparty_user_id' => $sender->id,
+                'type'                 => 'credit',
+                'amount'               => $convertedAmount,
+                'balance_before'       => $recipientBefore,
+                'balance_after'        => (float) $recipient->balance,
+                'description'          => "استلام رصيد من {$sender->name} ({$sender->phone})",
+                'reference_type'       => 'charging_point_transfer',
+                'reference_id'         => $sender->id,
+            ]);
+
+            // Notify both sides
+            try {
+                app(NotificationService::class)->send(
+                    $sender,
+                    'تم تحويل الرصيد',
+                    "تم خصم مبلغ " . number_format($amount) . " ريال من رصيدك.",
+                    ['type' => 'balance_transfer', 'direction' => 'out', 'to_user_id' => $recipient->id]
+                );
+                app(NotificationService::class)->send(
+                    $recipient,
+                    'تم استلام رصيد',
+                    "تم إضافة مبلغ " . number_format($convertedAmount) . " ريال إلى رصيدك من {$sender->name}.",
+                    ['type' => 'balance_transfer', 'direction' => 'in', 'from_user_id' => $sender->id, 'exchange_rate' => $exchangeRate]
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Transfer notification failed: ' . $e->getMessage());
+            }
+        });
+
+        return response()->json([
+            'success'          => true,
+            'message'          => 'تم تحويل الرصيد بنجاح',
+            'amount'           => $amount,
+            'converted_amount' => $convertedAmount,
+            'exchange_rate'    => $exchangeRate !== 1.0 ? $exchangeRate : null,
+            'recipient_name'   => $recipient->name,
+            'recipient_phone'  => $recipient->phone,
+            'new_balance'      => (float) $sender->fresh()->balance,
+        ]);
+    }
+
+    private function getTransferExchangeRate(?string $from, ?string $to): float
+    {
+        if (!$from || !$to || $from === $to) {
+            return 1.0;
+        }
+        $defaultRate = ($from === 'south' && $to === 'north') ? 1000.0 : 0.001;
+        return (float) \App\Models\AppSetting::get('currency_exchange_rate', $defaultRate);
+    }
+}
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class WalletController extends Controller
+{
+    public function balance(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'balance' => (float) $user->balance,
+                'available_balance' => (float) $user->available_balance,
+                'frozen_balance' => (float) $user->frozen_balance,
+                'advance_balance' => (float) $user->advance_balance,
+                'is_eligible_for_advance' => $user->isEligibleForAdvance(),
+                'currency' => $user->currency ?? 'YER',
+            ],
+        ]);
+    }
+
+    public function logs(Request $request): JsonResponse
+    {
+        $logs = WalletLog::where('user_id', $request->user()->id)
+            ->orderByDesc('created_at')
+            ->paginate(30);
+
+        return response()->json([
+            'success' => true,
+            'data' => $logs->map(fn($l) => [
+                'id' => $l->id,
+                'type' => $l->type,
+                'amount' => (float) $l->amount,
+                'balance_before' => (float) $l->balance_before,
+                'balance_after' => (float) $l->balance_after,
+                'description' => $l->description,
+                'reference_type' => $l->reference_type,
+                'created_at' => $l->created_at?->toDateTimeString(),
+            ])->values(),
+            'meta' => [
+                'total' => $logs->total(),
+                'current_page' => $logs->currentPage(),
+                'last_page' => $logs->lastPage(),
+            ],
+        ]);
+    }
+
+    public function bankAccounts(): JsonResponse
+    {
+        $accounts = BankAccount::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'owner_name', 'bank_name', 'account_number']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $accounts,
+        ]);
+    }
+
+    public function topup(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|numeric|min:1',
+            'bank_account_id' => 'nullable|exists:bank_accounts,id',
+            'transfer_receipt_number' => 'nullable|string|max:255',
+            'sender_name' => 'nullable|string|max:255',
+            'receipt_image' => 'nullable|image|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+        $amount = (float) $request->amount;
+        $bankAccountId = $request->input('bank_account_id');
+        $receiptNumber = $request->input('transfer_receipt_number');
+        $senderName = $request->input('sender_name');
+
+        $receiptImagePath = null;
+        if ($request->hasFile('receipt_image')) {
+            $receiptImagePath = $request->file('receipt_image')->store('receipt_images', 'public');
+        }
+
+        $bankLabel = '';
+        if ($bankAccountId) {
+            $account = BankAccount::find($bankAccountId);
+            if ($account) {
+                $bankLabel = " ({$account->bank_name} / {$account->account_number})";
+            }
+        }
+
+        WalletLog::create([
+            'user_id' => $user->id,
+            'type' => 'pending_topup',
+            'amount' => $amount,
+            'balance_before' => (float) $user->balance,
+            'balance_after' => (float) $user->balance,
+            'description' => 'طلب شحن رصيد بمبلغ ' . number_format($amount) . ' ريال' . $bankLabel,
+            'reference_type' => 'topup_request',
+            'bank_account_id' => $bankAccountId,
+            'transfer_receipt_number' => $receiptNumber,
+            'sender_name' => $senderName,
+            'receipt_image' => $receiptImagePath,
+        ]);
+
+        try {
+            $admins = User::where('type', 'admin')->get();
+            foreach ($admins as $admin) {
+                $body = 'المستخدم ' . $user->name . ' يطلب شحن رصيد بمبلغ ' . number_format($amount) . ' ريال.';
+                if ($receiptNumber) {
+                    $body .= ' رقم السند/الحوالة: ' . $receiptNumber;
+                }
+                if ($senderName) {
+                    $body .= ' - اسم المودع: ' . $senderName;
+                }
+                if ($receiptImagePath) {
+                    $body .= ' - تم إرفاق صورة السند';
+                }
+                app(NotificationService::class)->send(
+                    $admin,
+                    'طلب شحن رصيد',
+                    $body,
+                    ['type' => 'topup_request', 'user_id' => $user->id, 'amount' => $amount]
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Topup notification failed: ' . $e->getMessage());
+        }
+
+        $message = 'تم إرسال طلب الشحن، سيتم التواصل معك لإتمامه';
+        if ((float) $user->advance_balance > 0) {
+            $message .= '. تنبيه: لديك سلفة مستحقة بمبلغ ' . number_format($user->advance_balance) . ' ريال، وسيتم خصمها من مبلغ الشحن أولاً بعد موافقة الإدارة.';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'advance_balance' => (float) $user->advance_balance,
+        ]);
+    }
+}
