@@ -499,6 +499,15 @@ class _OwnerManagementActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _TopUpAction(
+            icon: Icons.router_outlined,
+            label: 'أجهزة MikroTik',
+            color: AppColors.primary,
+            onTap: () => context.push('/mikrotik'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _TopUpAction(
             icon: Icons.ev_station,
             label: 'نقاط الشحن',
             color: AppColors.lightBlue,

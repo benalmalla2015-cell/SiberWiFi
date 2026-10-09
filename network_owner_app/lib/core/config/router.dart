@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +19,12 @@ import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/charging_points/presentation/screens/charging_points_screen.dart';
 import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/mikrotik/data/router_model.dart';
+import '../../features/mikrotik/presentation/screens/hotspot_users_screen.dart';
+import '../../features/mikrotik/presentation/screens/router_dashboard_screen.dart';
+import '../../features/mikrotik/presentation/screens/router_setup_screen.dart';
+import '../../features/mikrotik/presentation/screens/routers_screen.dart';
+import '../../features/mikrotik/presentation/screens/voucher_generator_screen.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/splash_screen.dart';
 import '../widgets/welcome_screen.dart';
@@ -70,7 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final user = auth.user;
       final isPendingOwner = user?.isPendingNetworkOwner ?? false;
 
-      // Splash handles its own navigation — never redirect away from it
+      // Splash handles its own navigation â€” never redirect away from it
       if (isSplash) return null;
       // While auth is unknown, don't redirect (splash will navigate)
       if (isUnknown) return null;
@@ -80,7 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isPendingOwner && !isPending) return '/pending';
         // Approved owner should not see pending screen
         if (!isPendingOwner && isPending) return '/';
-        // Authenticated but on login/register → go home
+        // Authenticated but on login/register â†’ go home
         if (isLogin || isRegister) return '/';
         return null;
       }
@@ -125,14 +131,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/fiber-topup',
         builder: (context, state) => const ComingSoonScreen(
-          title: 'شحن رصيد فايبر',
+          title: 'ط´ط­ظ† ط±طµظٹط¯ ظپط§ظٹط¨ط±',
           icon: Icons.bolt_rounded,
         ),
       ),
       GoRoute(
         path: '/starlink-topup',
         builder: (context, state) => const ComingSoonScreen(
-          title: 'شحن رصيد Starlink',
+          title: 'ط´ط­ظ† ط±طµظٹط¯ Starlink',
           icon: Icons.satellite_alt_outlined,
         ),
       ),
@@ -177,6 +183,38 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ChargingPointsScreen(),
           ),
           GoRoute(
+            path: '/mikrotik',
+            builder: (context, state) => const RoutersScreen(),
+          ),
+          GoRoute(
+            path: '/mikrotik/setup',
+            builder: (context, state) =>
+                RouterSetupScreen(existing: state.extra as MikrotikRouterConfig?),
+          ),
+          GoRoute(
+            path: '/mikrotik/dashboard',
+            builder: (context, state) =>
+                RouterDashboardScreen(router: state.extra as MikrotikRouterConfig),
+          ),
+          GoRoute(
+            path: '/mikrotik/users',
+            builder: (context, state) {
+              final extra = state.extra;
+              if (extra is Map) {
+                return HotspotUsersScreen(
+                  router: extra['router'] as MikrotikRouterConfig,
+                  initialTab: (extra['tab'] as int?) ?? 0,
+                );
+              }
+              return HotspotUsersScreen(router: extra as MikrotikRouterConfig);
+            },
+          ),
+          GoRoute(
+            path: '/mikrotik/vouchers',
+            builder: (context, state) =>
+                VoucherGeneratorScreen(router: state.extra as MikrotikRouterConfig),
+          ),
+          GoRoute(
             path: '/conversations',
             builder: (context, state) => const ConversationsScreen(),
           ),
@@ -187,8 +225,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               return NetworkOwnerChatScreen(
                 networkId: int.parse(state.pathParameters['networkId']!),
                 contactId: int.parse(state.pathParameters['contactId']!),
-                networkName: extra['network_name']?.toString() ?? 'شبكة',
-                contactName: extra['contact_name']?.toString() ?? 'عميل',
+                networkName: extra['network_name']?.toString() ?? 'ط´ط¨ظƒط©',
+                contactName: extra['contact_name']?.toString() ?? 'ط¹ظ…ظٹظ„',
               );
             },
           ),

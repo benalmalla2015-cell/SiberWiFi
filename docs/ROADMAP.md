@@ -104,4 +104,9 @@
 | 2026-10-09 | مزامنة testapp مع آخر تحديثات السورس المعتمد (حذف حساب + صفحات قانونية + إصلاحات التطبيقات) + إعادة تخصيصات staging + بناء وتثبيت APK على الجهاز | ✅ |
 | 2026-10-09 | **نشر backend على staging لايف**: التطبيق خارج public_html في `staging-app/`، docroot الدومين الفرعي `staging/` فيه index.php مخصص فقط — `composer install` + migrate كامل + TestAccountSeeder + حساب أدمن + ملفات FCM + `optimize:clear`. اختبار لايف: `/`, `/api/regions`, `/api/maintenance-mode`, تسجيل دخول عميل ومالك، لوحة `/admin` — الكل يعمل والإنتاج سليم | ✅ |
 | 2026-10-09 | حسابات الاختبار على staging: عميل `700000001`، مالك `700000002`، عميل ثان `700000003`، أدمن `770000000` — كلمة المرور للجميع `123456` | ✅ |
+| 2026-10-09 | حسابات إضافية بطلب المالك: مالك `778257546` (معتمد + شبكة)، عميل `777993833` (رصيد 5000) — كلمة المرور `123456` | ✅ |
+| 2026-10-09 | لوحة Filament على staging: `https://staging.saiberwifi.net/admin` — `admin@staging.saiberwifi.net` / `123456` | ✅ |
+| 2026-10-09 | **ميزة MikroTik داخل network_owner_app**: `router_os_client` 2.0.1 (MIT) — نموذج `MikrotikRouterConfig` + تخزين آمن (`RouterStore` عبر flutter_secure_storage) + `RouterOsService` (اتصال/اختبار/قراءة الموارد/مستخدمي Hotspot/الباقات/الجلسات/إضافة وحذف مستخدمين) | ✅ |
+| 2026-10-09 | واجهات MikroTik بهوية التطبيق (أبيض/كحلي/أحمر، خط Cairo): قائمة الأجهزة، إعداد+اختبار اتصال، لوحة مراقبة (CPU/RAM/إصدار/مدة تشغيل/جلسات)، تبويبات مستخدمي Hotspot، توليد كروت دفعي + رفعها لـ `/network-owner/cards/upload` (idempotent) | ✅ |
+| 2026-10-09 | محاكي RouterOS API على الكمبيوتر (`routeros_sim.py`, منفذ 8728, `dev`/`dev123`) + `adb reverse tcp:8728` — اختبار لايف كامل على الجهاز دون راوتر فعلي | ✅ |
 | 2026-10-01 | استخراج وتحليل مستند API الشحن | ✅ (`API/api_text.txt` في المشروع الأصلي) |
