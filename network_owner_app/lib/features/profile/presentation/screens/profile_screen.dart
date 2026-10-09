@@ -145,7 +145,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   try {
                     await ref.read(authProvider.notifier).logout();
                   } finally {
-                    if (mounted) context.go('/login');
+                    // The GoRouter auth redirect navigates to /login when the
+                    // session state changes; context.go() on a deactivating
+                    // context asserts '_dependents.isEmpty'.
                   }
                 },
                 icon: const Icon(Icons.logout, color: AppColors.error),
@@ -158,10 +160,94 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmDeleteAccount(context, ref),
+                icon: const Icon(Icons.delete_forever, color: AppColors.error),
+                label: const Text(
+                  'حذف الحساب',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.error),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final passwordController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text(
+          'حذف الحساب',
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('سيتم حذف حسابك نهائياً وإلغاء جميع جلسات الدخول. لا يمكن التراجع عن هذا الإجراء.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'كلمة المرور الحالية',
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    final password = confirmed == true ? passwordController.text.trim() : '';
+    // The dialog's TextField keeps rebuilding during the dismiss animation —
+    // dispose after it finishes, otherwise the framework throws
+    // "TextEditingController used after being disposed" / '_dependents.isEmpty'.
+    Future.delayed(const Duration(milliseconds: 400), passwordController.dispose);
+
+    if (confirmed != true) return;
+
+    if (password.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى إدخال كلمة المرور')),
+        );
+      }
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).deleteAccount(password: password);
+    if (!context.mounted) return;
+    if (!success) {
+      final error = ref.read(authProvider).error ?? 'تعذر حذف الحساب';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppColors.error),
+      );
+    }
+    // On success, the GoRouter auth redirect routes to /login automatically —
+    // calling context.go() here asserts '_dependents.isEmpty' on the
+    // deactivating context.
   }
 
   Future<void> _showPayoutDetailsDialog() async {
@@ -433,56 +519,92 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('تعديل بيانات الحساب'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'الاسم'),
-              validator: (value) {
-                final v = value?.trim() ?? '';
-                if (v.isEmpty) return 'أدخل الاسم';
-                if (v.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length < 4) {
-                  return 'يجب إدخال الاسم الرباعي على الأقل';
-                }
-                return null;
-              },
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'الاسم'),
+                  validator: (value) {
+                    final v = value?.trim() ?? '';
+                    if (v.isEmpty) return 'أدخل الاسم';
+                    if (v.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length < 4) {
+                      return 'يجب إدخال الاسم الرباعي على الأقل';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    return value.contains('@')
+                        ? null
+                        : 'البريد الإلكتروني غير صالح';
+                  },
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _error!,
+                    style: const TextStyle(color: AppColors.error, fontSize: 13),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) return null;
-                return value.contains('@')
-                    ? null
-                    : 'البريد الإلكتروني غير صالح';
-              },
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: const TextStyle(color: AppColors.error, fontSize: 13),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.pop(context, false),
-          child: const Text('إلغاء'),
-        ),
-        AppButton(
-          label: 'حفظ',
-          height: 40,
-          fontSize: 14,
-          isLoading: _loading,
-          onPressed: _save,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          child: Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'حفظ',
+                  height: 44,
+                  fontSize: 14,
+                  borderRadius: 12,
+                  isLoading: _loading,
+                  onPressed: _save,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: _loading ? null : () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: AppColors.primary, width: 1.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -541,14 +663,15 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('تغيير كلمة المرور'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _currentController,
-              obscureText: true,
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _currentController,
+                obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'كلمة المرور الحالية',
               ),
@@ -585,6 +708,7 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
             ],
           ],
         ),
+      ),
       ),
       actions: [
         TextButton(

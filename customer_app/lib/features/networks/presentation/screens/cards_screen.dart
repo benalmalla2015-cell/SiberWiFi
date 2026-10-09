@@ -240,7 +240,9 @@ class _CardItem extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -261,7 +263,6 @@ class _CardItem extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
                           if (hasOffer)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -282,7 +283,6 @@ class _CardItem extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          if (hasOffer) const SizedBox(width: 8),
                           if (availableCount > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -414,12 +414,16 @@ class _CardItem extends ConsumerWidget {
                       children: [
                         const Icon(Icons.shopping_cart_outlined, size: 16),
                         const SizedBox(width: 6),
-                        Text(
-                          'شراء ${canAdvance ? '' : '${fmt.format(displayPrice)} ر.ي'}',
-                          style: const TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            'شراء ${canAdvance ? '' : '${fmt.format(displayPrice)} ر.ي'}',
+                            style: const TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -663,12 +667,13 @@ class _PurchaseConfirmationDialogState
           fontWeight: FontWeight.bold,
         ),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'فئة بقيمة ${_fmt.format(widget.value)} ر.ي',
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'فئة بقيمة ${_fmt.format(widget.value)} ر.ي',
             style: const TextStyle(fontFamily: 'Cairo'),
           ),
           const SizedBox(height: 4),
@@ -760,6 +765,7 @@ class _PurchaseConfirmationDialogState
           ),
         ],
       ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -784,14 +790,23 @@ class _PurchaseConfirmationDialogState
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: Text(
-            widget.method == 'advance'
-                ? 'سلفني ${_fmt.format(widget.price * (int.tryParse(_quantityController.text) ?? 1))} ر.ي'
-                : 'شراء بـ ${_fmt.format(widget.price * (int.tryParse(_quantityController.text) ?? 1))} ر.ي',
-            style: const TextStyle(
-              fontFamily: 'Cairo',
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  widget.method == 'advance'
+                      ? 'سلفني ${_fmt.format(widget.price * (int.tryParse(_quantityController.text) ?? 1))} ر.ي'
+                      : 'شراء بـ ${_fmt.format(widget.price * (int.tryParse(_quantityController.text) ?? 1))} ر.ي',
+                  style: const TextStyle(
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -833,6 +848,8 @@ class _SpecItem extends StatelessWidget {
                 fontSize: 10,
                 color: AppColors.textGray,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
             Text(
@@ -844,6 +861,8 @@ class _SpecItem extends StatelessWidget {
                 color: color,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             if (subtitle != null)
               Text(
@@ -855,6 +874,8 @@ class _SpecItem extends StatelessWidget {
                   decoration: TextDecoration.lineThrough,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
           ],
         ),

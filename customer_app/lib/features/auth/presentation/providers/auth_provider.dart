@@ -192,6 +192,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<String?> deleteAccount({required String password}) async {
+    try {
+      await _api.post('/auth/account/delete', data: {'password': password});
+      await logout();
+      return null;
+    } on DioException catch (e) {
+      return _authErrorMessage(e, 'تعذر حذف الحساب، حاول مجدداً');
+    }
+  }
+
   Future<void> logout() async {
     state = const AuthState(status: AuthStatus.unauthenticated);
     await _api.clearToken();

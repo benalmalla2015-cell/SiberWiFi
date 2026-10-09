@@ -141,27 +141,31 @@ class HomeScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'مرحباً 👋',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 13,
-                      color: Colors.white70,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'مرحباً 👋',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 13,
+                        color: Colors.white70,
+                      ),
                     ),
-                  ),
-                  Text(
-                    user?.name ?? 'المستخدم',
-                    style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    Text(
+                      user?.name ?? 'المستخدم',
+                      style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               GestureDetector(
                 onTap: () => GoRouter.of(context).go('/notifications'),
@@ -222,6 +226,8 @@ class HomeScreen extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -327,7 +333,7 @@ class HomeScreen extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 14,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.95,
+            childAspectRatio: 0.88,
             children: actions.map((a) => _quickActionCard(context, a)).toList(),
           ),
           const SizedBox(height: 18),
@@ -426,8 +432,10 @@ class HomeScreen extends ConsumerWidget {
             const Icon(Icons.chevron_left_rounded, color: Colors.white70),
             Expanded(
               child: Text(
-                'خدمة سداد باقات الإنترنت\nوشركات الإتصالات',
+                'خدمة سداد باقات الإنترنت وشركات الإتصالات',
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Cairo',
                   fontSize: 14,
@@ -493,6 +501,8 @@ class HomeScreen extends ConsumerWidget {
                 fontSize: 12,
                 color: AppColors.textDark,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -589,7 +599,7 @@ class HomeScreen extends ConsumerWidget {
             )
           else
             SizedBox(
-            height: 96,
+            height: 108,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: networks.length,
@@ -1176,7 +1186,7 @@ class _OffersCarouselState extends State<_OffersCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: 168,
+          height: 188,
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.offers.length,
@@ -1270,6 +1280,8 @@ Widget _homeOfferCard(BuildContext context, Map<String, dynamic> offer) {
                 const SizedBox(height: 14),
                 Text(
                   offerTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 18,

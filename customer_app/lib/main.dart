@@ -410,8 +410,15 @@ class _CustomerAppState extends ConsumerState<CustomerApp>
       ],
       builder: (context, child) {
         final mq = MediaQuery.of(context);
+        final clampedTextScaler = mq.textScaler.clamp(
+          minScaleFactor: 0.8,
+          maxScaleFactor: 1.15,
+        );
         Widget body = MediaQuery(
-          data: mq.copyWith(platformBrightness: Brightness.light),
+          data: mq.copyWith(
+            platformBrightness: Brightness.light,
+            textScaler: clampedTextScaler,
+          ),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: child ?? const LoginScreen(),

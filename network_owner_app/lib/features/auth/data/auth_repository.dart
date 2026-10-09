@@ -112,6 +112,24 @@ class AuthRepository {
     await HiveService.clearAll();
   }
 
+  Future<void> deleteAccount({required String password}) async {
+    try {
+      final response = await _api.post(
+        '/auth/account/delete',
+        data: {'password': password},
+      );
+      if (response.data['success'] != true) {
+        throw response.data['message'] ?? 'تعذر حذف الحساب';
+      }
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      if (body is Map && body['message'] != null) throw body['message'].toString();
+      throw 'تعذر حذف الحساب';
+    }
+    await _api.clearToken();
+    await HiveService.clearAll();
+  }
+
   Future<UserModel?> me() async {
     try {
       final response = await _api.get('/auth/me');

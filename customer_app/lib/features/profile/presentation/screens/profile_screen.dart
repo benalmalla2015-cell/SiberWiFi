@@ -117,11 +117,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         color: AppColors.accent,
                         onTap: () => _confirmLogout(context, ref),
                       ),
+                      _divider(),
+                      _menuItem(
+                        icon: Icons.delete_forever_rounded,
+                        label: 'حذف الحساب',
+                        color: AppColors.accent,
+                        onTap: () => _confirmDeleteAccount(context, ref),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
                   const Text(
-                    'سايبر WiFi v1.0.0',
+                    'سايبر WiFi v1.0.1',
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 12,
@@ -353,7 +360,95 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (ok != true) return;
 
     await ref.read(authProvider.notifier).logout();
-    if (context.mounted) context.go('/login');
+    // The GoRouter auth redirect navigates to /login automatically when the
+    // session state changes — no context.go() here (it can assert on a
+    // deactivating context, see deleteAccount).
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final passwordController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'حذف الحساب',
+          style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold, color: AppColors.accent),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'سيتم حذف حسابك نهائياً وإلغاء جميع جلسات الدخول. لا يمكن التراجع عن هذا الإجراء.',
+              style: TextStyle(fontFamily: 'Cairo'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'كلمة المرور الحالية',
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                labelStyle: TextStyle(fontFamily: 'Cairo'),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(fontFamily: 'Cairo', color: AppColors.textGray),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'حذف',
+              style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final password = confirmed == true ? passwordController.text.trim() : '';
+    // The dialog's TextField keeps rebuilding during the dismiss animation,
+    // so the controller must not be disposed synchronously — defer it until
+    // the pop animation has finished to avoid "used after being disposed" /
+    // '_dependents.isEmpty' framework assertions.
+    Future.delayed(const Duration(milliseconds: 400), passwordController.dispose);
+
+    if (confirmed != true) return;
+
+    if (password.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى إدخال كلمة المرور', style: TextStyle(fontFamily: 'Cairo'))),
+        );
+      }
+      return;
+    }
+
+    final error = await ref.read(authProvider.notifier).deleteAccount(password: password);
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error, style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: AppColors.accent,
+        ),
+      );
+    }
+    // On success, the auth redirect in GoRouter already routes to /login once
+    // the session is cleared — calling context.go() here on a deactivating
+    // context triggers the '_dependents.isEmpty' framework assertion.
   }
 
   void _showAbout(BuildContext context) {

@@ -45,6 +45,9 @@ Route::get('/charging-points',                      [ChargingPointController::cl
 // its session after receiving the 403 account_suspended response.
 Route::middleware('auth:sanctum')->post('/auth/logout', [AuthController::class, 'logout']);
 
+// Account deletion is also reachable for suspended accounts.
+Route::middleware('auth:sanctum')->post('/auth/account/delete', [AuthController::class, 'deleteAccount']);
+
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     // Auth

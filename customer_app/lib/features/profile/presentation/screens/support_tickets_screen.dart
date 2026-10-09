@@ -311,47 +311,49 @@ class _NewTicketFormState extends ConsumerState<_NewTicketForm> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const Text(
-        'طلب دعم جديد',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+  Widget build(BuildContext context) => SingleChildScrollView(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'طلب دعم جديد',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      const SizedBox(height: 16),
-      TextField(
-        controller: _subject,
-        decoration: const InputDecoration(labelText: 'الموضوع'),
-      ),
-      const SizedBox(height: 12),
-      TextField(
-        controller: _message,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          labelText: 'كيف يمكننا مساعدتك؟',
-          alignLabelWithHint: true,
+        const SizedBox(height: 16),
+        TextField(
+          controller: _subject,
+          decoration: const InputDecoration(labelText: 'الموضوع'),
         ),
-      ),
-      const SizedBox(height: 18),
-      ElevatedButton(
-        onPressed: _submitting ? null : _submit,
-        child: _submitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text('إرسال الطلب'),
-      ),
-    ],
+        const SizedBox(height: 12),
+        TextField(
+          controller: _message,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'كيف يمكننا مساعدتك؟',
+            alignLabelWithHint: true,
+          ),
+        ),
+        const SizedBox(height: 18),
+        ElevatedButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text('إرسال الطلب'),
+        ),
+      ],
+    ),
   );
 }

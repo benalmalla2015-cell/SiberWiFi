@@ -179,6 +179,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> deleteAccount({required String password}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repo.deleteAccount(password: password);
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      return true;
+    } catch (e) {
+      String msg = e.toString();
+      if (msg.startsWith('Exception: ')) msg = msg.substring(11);
+      if (msg.contains('DioException') || msg.contains('SocketException')) {
+        msg = 'تعذر الاتصال بالخادم';
+      }
+      state = state.copyWith(isLoading: false, error: msg);
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _repo.logout();

@@ -2,7 +2,7 @@ name: customer_app
 description: "سايبر WiFi - تطبيق العميل"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.4

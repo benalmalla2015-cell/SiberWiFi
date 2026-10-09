@@ -445,12 +445,13 @@ class _RatingSheetState extends ConsumerState<_RatingSheet> {
         right: 20,
         top: 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'قيّم الشبكة',
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'قيّم الشبكة',
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 18,
@@ -514,6 +515,7 @@ class _RatingSheetState extends ConsumerState<_RatingSheet> {
           ),
           const SizedBox(height: 16),
         ],
+      ),
       ),
     );
   }
@@ -586,12 +588,13 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
         right: 20,
         top: 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'إرسال بلاغ',
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'إرسال بلاغ',
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 18,
@@ -652,6 +655,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           ),
           const SizedBox(height: 16),
         ],
+      ),
       ),
     );
   }

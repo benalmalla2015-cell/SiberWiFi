@@ -49,9 +49,16 @@ class AuthController extends Controller
         }
 
         $referredBy = null;
-        if ($request->referral_code) {
-            $referrer   = User::where('referral_code', $request->referral_code)->first();
-            $referredBy = $referrer?->id;
+        $referralCode = trim((string) ($request->input('referral_code') ?? $request->input('referralCode') ?? $request->input('referral')));
+        if ($referralCode !== '') {
+            if (preg_match('/[?&]ref=([^&\s]+)/i', $referralCode, $matches)) {
+                $referralCode = urldecode($matches[1]);
+            }
+            $referrer = User::where('referral_code', strtoupper(trim($referralCode)))->first();
+            if (!$referrer) {
+                return response()->json(['success' => false, 'message' => 'كود الإحالة غير صحيح'], 422);
+            }
+            $referredBy = $referrer->id;
         }
 
         $user = User::create([
@@ -297,6 +304,46 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => 'تم تسجيل الخروج']);
     }
 
+    /**
+     * Permanently delete the authenticated user's account.
+     * Uses soft delete so financial transaction records remain intact,
+     * while personal identifiers are anonymized and all sessions are revoked.
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['success' => false, 'message' => 'كلمة المرور الحالية غير صحيحة'], 422);
+        }
+
+        // Revoke all active sessions and push tokens
+        $user->tokens()->delete();
+        FcmToken::where('user_id', $user->id)->delete();
+
+        // Anonymize personal data before soft deleting. The phone column is
+        // varchar(20)+unique, so the placeholder is kept short and unique.
+        $user->name    = 'مستخدم محذوف';
+        $user->phone   = 'del' . $user->id . 'x' . mt_rand(1000, 9999);
+        $user->email   = null;
+        $user->avatar  = null;
+        $user->device_id = null;
+        $user->is_active = false;
+        $user->save();
+
+        // Soft delete so related records (transactions, networks, etc.) keep FK integrity
+        $user->delete();
+
+        return response()->json(['success' => true, 'message' => 'تم حذف الحساب بنجاح']);
+    }
+
     public function me(Request $request): JsonResponse
     {
         return response()->json([
@@ -474,33 +521,32 @@ class AuthController extends Controller
 
         $setting = \App\Models\CommissionSetting::where('type', 'referral')->where('region_type', $referrer->region_type)->first();
         $amount = $setting ? (float) $setting->fixed_amount : 0;
-        if ($amount <= 0) {
-            return;
-        }
 
         \DB::transaction(function () use ($referrer, $referred, $amount) {
-            $balanceBefore = (float) $referrer->balance;
+            if ($amount > 0) {
+                $balanceBefore = (float) $referrer->balance;
 
-            $referrer->increment('balance', $amount);
-            $referrer->increment('available_balance', $amount);
+                $referrer->increment('balance', $amount);
+                $referrer->increment('available_balance', $amount);
 
-            \App\Models\WalletLog::create([
-                'user_id' => $referrer->id,
-                'type' => 'referral_commission',
-                'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => (float) $referrer->balance,
-                'description' => 'عمولة إحالة ' . $referred->name . ' (' . $referred->phone . ')',
-                'reference_type' => 'referral',
-                'reference_id' => $referred->id,
-            ]);
+                \App\Models\WalletLog::create([
+                    'user_id' => $referrer->id,
+                    'type' => 'referral_commission',
+                    'amount' => $amount,
+                    'balance_before' => $balanceBefore,
+                    'balance_after' => (float) $referrer->balance,
+                    'description' => 'عمولة إحالة ' . $referred->name . ' (' . $referred->phone . ')',
+                    'reference_type' => 'referral',
+                    'reference_id' => $referred->id,
+                ]);
+            }
 
             \App\Models\Referral::create([
                 'referrer_id' => $referrer->id,
                 'referred_id' => $referred->id,
                 'commission_amount' => $amount,
-                'is_paid' => true,
-                'paid_at' => now(),
+                'is_paid' => $amount > 0,
+                'paid_at' => $amount > 0 ? now() : null,
             ]);
         });
     }
