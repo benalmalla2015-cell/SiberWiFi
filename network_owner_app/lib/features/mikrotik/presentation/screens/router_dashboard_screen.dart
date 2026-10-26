@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/router_model.dart';
+import '../providers/entitlement_provider.dart';
 import '../providers/mikrotik_provider.dart';
 
 class RouterDashboardScreen extends ConsumerWidget {
@@ -40,6 +41,7 @@ class RouterDashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: [
               _HeaderCard(router: router, snap: s),
+              const _SubscriptionBanner(),
               const SizedBox(height: 16),
               _StatsGrid(snap: s),
               const SizedBox(height: 20),
@@ -65,6 +67,70 @@ class RouterDashboardScreen extends ConsumerWidget {
                 subtitle: 'إنشاء دفعة كروت على الراوتر',
                 onTap: () =>
                     context.push('/mikrotik/vouchers', extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.download_outlined,
+                color: AppColors.warning,
+                title: 'استيراد من الراوتر',
+                subtitle: 'تحويل مستخدمي الراوتر الحاليين إلى كروت',
+                onTap: () =>
+                    context.push('/mikrotik/import', extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.monitor_heart_outlined,
+                color: const Color(0xFF14B8A6),
+                title: 'المراقبة والأدوات',
+                subtitle: 'بث مباشر • صحة الجهاز • جيران • Netwatch • سجلات',
+                onTap: () => context.push('/mikrotik/monitoring',
+                    extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.style_outlined,
+                color: const Color(0xFFF59E0B),
+                title: 'قوالب الكروت',
+                subtitle: 'تصميم يدوي أو صوري لطباعة الكروت',
+                onTap: () => context.push('/mikrotik/card-templates',
+                    extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.lan_outlined,
+                color: const Color(0xFF8B5CF6),
+                title: 'مستخدمو PPPoE',
+                subtitle: 'اشتراكات البرودباند والجلسات',
+                onTap: () =>
+                    context.push('/mikrotik/pppoe', extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.manage_accounts_outlined,
+                color: const Color(0xFF0EA5E9),
+                title: 'User Manager',
+                subtitle: 'مستخدمو وباقات اليوزر مانجر',
+                onTap: () => context.push('/mikrotik/user-manager',
+                    extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.settings_ethernet_outlined,
+                color: const Color(0xFF64748B),
+                title: 'الشبكة المتقدمة',
+                subtitle: 'NAT • فايروول • Queues • DHCP • حظر Tethering',
+                onTap: () =>
+                    context.push('/mikrotik/network', extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.admin_panel_settings_outlined,
+                color: AppColors.primaryDark,
+                title: 'النظام',
+                subtitle: 'نسخ • مستخدمون • مجدولات • صفحات • Telegram',
+                onTap: () =>
+                    context.push('/mikrotik/system', extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.travel_explore_outlined,
+                color: const Color(0xFF0D9488),
+                title: 'الوصول عن بُعد',
+                subtitle: 'DDNS • API-SSL • شهادة • ملف اتصال',
+                onTap: () =>
+                    context.push('/mikrotik/remote-access', extra: router),
               ),
             ],
           ),
@@ -143,6 +209,70 @@ class _HeaderCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Trial / expired banner — only rendered once the backend flips
+/// `mikrotik.enforce` on; invisible during the allow-all rollout phase.
+class _SubscriptionBanner extends ConsumerWidget {
+  const _SubscriptionBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(entitlementEnforcedProvider)) {
+      return const SizedBox.shrink();
+    }
+    final daysLeft = ref.watch(trialDaysLeftProvider);
+    final paid = ref.watch(hasPaidAccessProvider);
+    if (paid && daysLeft == null) return const SizedBox.shrink();
+
+    final expired = !paid;
+    final color = expired ? AppColors.accent : const Color(0xFFF59E0B);
+    final text = expired
+        ? 'انتهت صلاحية الاشتراك — رقِّ حسابك لاستعادة كل الميزات'
+        : 'فترة تجريبية — بقي $daysLeft يوم';
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Material(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => context.push('/mikrotik/subscription'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  expired
+                      ? Icons.error_outline
+                      : Icons.workspace_premium_outlined,
+                  color: color,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(text,
+                      style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5)),
+                ),
+                Text('الاشتراك',
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 12, color: AppColors.textLight),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

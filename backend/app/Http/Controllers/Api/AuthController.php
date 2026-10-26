@@ -124,8 +124,11 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'تم إيقاف الحساب من قبل إدارة التطبيق يرجى مراجعة الدعم الفني'], 403);
         }
 
-        $user->tokens()->delete();
-        $token = $user->createToken('mobile_app')->plainTextToken;
+        // Sessions are scoped per app: logging in from the booster app must not
+        // revoke the customer app's token (and vice versa).
+        $tokenName = $request->header('X-App-Type') === 'booster_app' ? 'booster_app' : 'mobile_app';
+        $user->tokens()->where('name', $tokenName)->delete();
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         if ($request->fcm_token) {
             $this->saveFcmToken($user->id, $request->fcm_token, $request);
@@ -300,7 +303,9 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         FcmToken::where('user_id', $request->user()->id)->update(['is_active' => false]);
-        $request->user()->tokens()->delete();
+        // Revoke only this session so logging out of one app (e.g. the
+        // booster) does not kill the session of another app for the user.
+        $request->user()->currentAccessToken()->delete();
         return response()->json(['success' => true, 'message' => 'تم تسجيل الخروج']);
     }
 

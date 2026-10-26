@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/connectivity_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../mikrotik/data/feature_keys.dart';
+import '../../../mikrotik/presentation/widgets/feature_gate.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/sales_chart_widget.dart';
 import '../widgets/recent_transactions_widget.dart';
@@ -521,6 +523,18 @@ class _OwnerManagementActionsRow extends StatelessWidget {
             label: 'تقييمات العملاء',
             color: AppColors.warning,
             onTap: () => context.push('/reviews'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: FeatureGate(
+            feature: AccFeatures.module,
+            child: _TopUpAction(
+              icon: Icons.account_balance_outlined,
+              label: 'المحاسبة',
+              color: AppColors.accent,
+              onTap: () => context.push('/accounting'),
+            ),
           ),
         ),
       ],

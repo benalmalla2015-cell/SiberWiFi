@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PayoutController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\SupportTicketController;
+use App\Http\Controllers\Api\TopupController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerDashboardController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerReportController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerChargingPointController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerNotificationController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerPayoutController;
+use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerMikrotikController;
+use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerMikrotikSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public routes ────────────────────────────────────────────────
@@ -82,6 +85,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     // Bank accounts (shown in customer app top-up screen)
     Route::get('/bank-accounts',                  [WalletController::class, 'bankAccounts']);
+
+    // Instant top-up (TaizTel provider) — wallet-billed services
+    Route::get('/topup/services',                 [TopupController::class, 'services']);
+    Route::post('/topup/query',                   [TopupController::class, 'query'])->middleware('throttle:30,1');
+    Route::get('/topup/offers',                   [TopupController::class, 'offers'])->middleware('throttle:30,1');
+    Route::post('/topup/pay',                     [TopupController::class, 'pay'])->middleware('throttle:15,1');
+    Route::post('/topup/game',                    [TopupController::class, 'game'])->middleware('throttle:15,1');
+    Route::post('/topup/offer/activate',          [TopupController::class, 'activateOffer'])->middleware('throttle:15,1');
+    Route::get('/topup/orders',                   [TopupController::class, 'orders']);
+    Route::get('/topup/orders/{id}/status',       [TopupController::class, 'orderStatus'])->middleware('throttle:30,1');
 
     // Wallet
     Route::get('/wallet/balance',                 [WalletController::class, 'balance']);
@@ -160,5 +173,19 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/payouts',                    [NetworkOwnerPayoutController::class, 'index']);
         Route::post('/payouts',                   [NetworkOwnerPayoutController::class, 'store']);
         Route::post('/payouts/{id}/confirm-receipt', [NetworkOwnerPayoutController::class, 'confirmReceipt']);
+
+        // MikroTik router registry — the app upserts here after each
+        // successful RouterOS connection; router passwords never leave
+        // the device (api_password field stays optional/unused).
+        Route::get('/mikrotik/routers',           [NetworkOwnerMikrotikController::class, 'index']);
+        Route::post('/mikrotik/routers/sync',     [NetworkOwnerMikrotikController::class, 'sync']);
+        Route::delete('/mikrotik/routers/{id}',   [NetworkOwnerMikrotikController::class, 'destroy']);
+
+        // MikroTik subscription & entitlement layer
+        Route::get('/mikrotik/entitlements',      [NetworkOwnerMikrotikSubscriptionController::class, 'entitlements']);
+        Route::get('/mikrotik/plans',             [NetworkOwnerMikrotikSubscriptionController::class, 'plans']);
+        Route::post('/mikrotik/subscribe',        [NetworkOwnerMikrotikSubscriptionController::class, 'subscribe']);
+        Route::get('/mikrotik/payments',          [NetworkOwnerMikrotikSubscriptionController::class, 'paymentRequests']);
+        Route::post('/mikrotik/payments',         [NetworkOwnerMikrotikSubscriptionController::class, 'storePaymentRequest']);
     });
 });

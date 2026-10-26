@@ -59,3 +59,8 @@ hs_err_pid*.log
 
 # ===== Local notes with credentials =====
 /*.txt
+
+# ===== Local backups & tooling artifacts =====
+backend_backup_*/
+tools/__pycache__/
+tools/routeros_cmd_log.txt

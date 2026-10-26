@@ -21,10 +21,22 @@ import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/mikrotik/data/router_model.dart';
 import '../../features/mikrotik/presentation/screens/hotspot_users_screen.dart';
+import '../../features/mikrotik/presentation/screens/import_router_cards_screen.dart';
+import '../../features/mikrotik/presentation/screens/card_templates_screen.dart';
+import '../../features/mikrotik/presentation/screens/advanced_network_screen.dart';
+import '../../features/mikrotik/presentation/screens/system_screen.dart';
+import '../../features/mikrotik/presentation/screens/monitoring_screen.dart';
+import '../../features/mikrotik/presentation/screens/pppoe_screen.dart';
+import '../../features/mikrotik/presentation/screens/user_manager_screen.dart';
 import '../../features/mikrotik/presentation/screens/router_dashboard_screen.dart';
 import '../../features/mikrotik/presentation/screens/router_setup_screen.dart';
 import '../../features/mikrotik/presentation/screens/routers_screen.dart';
 import '../../features/mikrotik/presentation/screens/voucher_generator_screen.dart';
+import '../../features/mikrotik/presentation/screens/subscription_screen.dart';
+import '../../features/mikrotik/presentation/screens/remote_access_screen.dart';
+import '../../features/mikrotik/data/feature_keys.dart';
+import '../../features/mikrotik/presentation/widgets/feature_gate.dart';
+import '../../features/accounting/presentation/screens/acc_home_screen.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/splash_screen.dart';
 import '../widgets/welcome_screen.dart';
@@ -188,31 +200,80 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/mikrotik/setup',
-            builder: (context, state) =>
-                RouterSetupScreen(existing: state.extra as MikrotikRouterConfig?),
+            builder: (context, state) => RouterSetupScreen(
+                existing: mikrotikRouterFromExtra(state.extra)),
           ),
           GoRoute(
             path: '/mikrotik/dashboard',
-            builder: (context, state) =>
-                RouterDashboardScreen(router: state.extra as MikrotikRouterConfig),
+            builder: (context, state) => _mikrotikScreen(
+                state, (r) => RouterDashboardScreen(router: r)),
           ),
           GoRoute(
             path: '/mikrotik/users',
             builder: (context, state) {
               final extra = state.extra;
-              if (extra is Map) {
-                return HotspotUsersScreen(
-                  router: extra['router'] as MikrotikRouterConfig,
-                  initialTab: (extra['tab'] as int?) ?? 0,
-                );
-              }
-              return HotspotUsersScreen(router: extra as MikrotikRouterConfig);
+              final tab =
+                  extra is Map ? (extra['tab'] as num?)?.toInt() ?? 0 : 0;
+              return _mikrotikScreen(
+                  state, (r) => HotspotUsersScreen(router: r, initialTab: tab));
             },
           ),
           GoRoute(
             path: '/mikrotik/vouchers',
+            builder: (context, state) => _mikrotikScreen(
+                state, (r) => VoucherGeneratorScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/import',
+            builder: (context, state) => _mikrotikScreen(
+                state, (r) => ImportRouterCardsScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/pppoe',
             builder: (context, state) =>
-                VoucherGeneratorScreen(router: state.extra as MikrotikRouterConfig),
+                _mikrotikScreen(state, (r) => PppoeScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/user-manager',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => UserManagerScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/card-templates',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => CardTemplatesScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/monitoring',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => MonitoringScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/network',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => AdvancedNetworkScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/system',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => SystemScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/subscription',
+            builder: (context, state) => const SubscriptionScreen(),
+          ),
+          GoRoute(
+            path: '/mikrotik/remote-access',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => RemoteAccessScreen(router: r)),
+          ),
+          // ── Track ACC — accounting routes (appended block, ACC-00) ──
+          GoRoute(
+            path: '/accounting',
+            builder: (context, state) => const FeatureGate(
+              feature: AccFeatures.module,
+              child: AccHomeScreen(),
+            ),
           ),
           GoRoute(
             path: '/conversations',
@@ -235,3 +296,50 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Builds a MikroTik screen after resolving `state.extra` into a
+/// [MikrotikRouterConfig]. If the payload was lost (e.g. full OS
+/// state-restoration with no extra) we show a graceful fallback
+/// instead of crashing the route with a type-cast error.
+Widget _mikrotikScreen(
+  GoRouterState state,
+  Widget Function(MikrotikRouterConfig router) build,
+) {
+  final router = mikrotikRouterFromExtra(state.extra);
+  if (router == null) return const _MissingRouterScreen();
+  return build(router);
+}
+
+class _MissingRouterScreen extends StatelessWidget {
+  const _MissingRouterScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('MikroTik')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.router_outlined, size: 56),
+              const SizedBox(height: 16),
+              const Text(
+                'انتهت الجلسة — أعد فتح الراوتر من القائمة',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => context.go('/mikrotik'),
+                icon: const Icon(Icons.list),
+                label: const Text('قائمة الأجهزة'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

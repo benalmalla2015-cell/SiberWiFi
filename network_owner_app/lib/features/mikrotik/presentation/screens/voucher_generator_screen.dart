@@ -5,9 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../networks/data/networks_repository.dart';
 import '../../../networks/presentation/providers/networks_provider.dart';
+import '../../data/card_template.dart';
+import '../../data/card_template_store.dart';
 import '../../data/router_model.dart';
 import '../../data/router_os_service.dart';
+import '../../data/voucher_print_service.dart';
 import '../providers/mikrotik_provider.dart';
+import '../widgets/voucher_card_view.dart';
+import 'card_templates_screen.dart';
 
 class VoucherGeneratorScreen extends ConsumerStatefulWidget {
   final MikrotikRouterConfig router;
@@ -23,6 +28,11 @@ class _VoucherGeneratorScreenState
   final _countCtrl = TextEditingController(text: '10');
   final _lengthCtrl = TextEditingController(text: '8');
   final _uptimeCtrl = TextEditingController();
+  final _dataCtrl = TextEditingController();
+  final _validityCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  String _dataUnit = 'G'; // G or M → limit-bytes-total
+  String _uptimeUnit = 'h'; // h or m
   String? _profile;
   int? _networkId;
   int? _categoryId;
@@ -32,12 +42,45 @@ class _VoucherGeneratorScreenState
   int _total = 0;
   List<String> _generated = [];
   String? _error;
+  List<CardTemplate> _templates = [];
+  CardTemplate? _template;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTemplates();
+  }
+
+  Future<void> _loadTemplates() async {
+    final list = await CardTemplateStore.load(widget.router.id);
+    if (mounted) {
+      setState(() {
+        _templates = list;
+        _template ??= list.isNotEmpty ? list.first : null;
+      });
+    }
+  }
+
+  int? get _dataLimitBytes {
+    final v = int.tryParse(_dataCtrl.text.trim());
+    if (v == null || v <= 0) return null;
+    return v * (_dataUnit == 'G' ? 1073741824 : 1048576);
+  }
+
+  String? get _limitUptime {
+    final v = _uptimeCtrl.text.trim();
+    if (v.isEmpty) return null;
+    return '$v$_uptimeUnit';
+  }
 
   @override
   void dispose() {
     _countCtrl.dispose();
     _lengthCtrl.dispose();
     _uptimeCtrl.dispose();
+    _dataCtrl.dispose();
+    _validityCtrl.dispose();
+    _priceCtrl.dispose();
     super.dispose();
   }
 
@@ -68,8 +111,10 @@ class _VoucherGeneratorScreenState
           password: _sameAsCode ? code : null,
           profile: _profile,
           comment: batch,
-          limitUptime:
-              _uptimeCtrl.text.trim().isEmpty ? null : _uptimeCtrl.text.trim(),
+          limitUptime: _limitUptime,
+          limitBytesTotal: _dataLimitBytes,
+          validityDays: int.tryParse(_validityCtrl.text.trim()),
+          price: int.tryParse(_priceCtrl.text.trim()),
         );
         codes.add(code);
         if (mounted) setState(() => _done = i + 1);
@@ -98,6 +143,20 @@ class _VoucherGeneratorScreenState
         'network_id': _networkId,
         'category_id': _categoryId,
         'codes': _generated,
+        'source': 'mikrotik',
+        if (widget.router.remoteId != null)
+          'router_id': widget.router.remoteId,
+        'meta': {
+          'batch': 'batch-${DateTime.now().millisecondsSinceEpoch}',
+          if (_template != null) 'template_name': _template!.name,
+          if (_limitUptime != null) 'limit_uptime': _limitUptime,
+          if (_dataLimitBytes != null)
+            'limit_bytes_total': _dataLimitBytes,
+          if (int.tryParse(_validityCtrl.text.trim()) != null)
+            'validity_days': int.parse(_validityCtrl.text.trim()),
+          if (int.tryParse(_priceCtrl.text.trim()) != null)
+            'price': int.parse(_priceCtrl.text.trim()),
+        },
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +247,7 @@ class _VoucherGeneratorScreenState
           const SizedBox(height: 14),
           snap.when(
             loading: () => const LinearProgressIndicator(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
             data: (s) => DropdownButtonFormField<String>(
               initialValue: _profile,
               decoration: const InputDecoration(
@@ -206,11 +265,105 @@ class _VoucherGeneratorScreenState
             ),
           ),
           const SizedBox(height: 14),
-          TextFormField(
-            controller: _uptimeCtrl,
-            decoration: const InputDecoration(
-              labelText: 'مدة الصلاحية (اختياري، مثل 1d أو 12h)',
-              prefixIcon: Icon(Icons.schedule),
+          // ── Consumption limits (قيود الاستهلاك) ──
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.inputBg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.divider),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('قيود الاستهلاك (اختياري)',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppColors.primary)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: _dataCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                            labelText: 'الرصيد'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _dataUnit,
+                        decoration:
+                            const InputDecoration(labelText: 'وحدة'),
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'G', child: Text('GB')),
+                          DropdownMenuItem(
+                              value: 'M', child: Text('MB')),
+                        ],
+                        onChanged: (v) => setState(
+                            () => _dataUnit = v ?? 'G'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: _uptimeCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                            labelText: 'وقت الاستهلاك'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _uptimeUnit,
+                        decoration:
+                            const InputDecoration(labelText: 'وحدة'),
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'h', child: Text('ساعة')),
+                          DropdownMenuItem(
+                              value: 'm', child: Text('دقيقة')),
+                        ],
+                        onChanged: (v) => setState(
+                            () => _uptimeUnit = v ?? 'h'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _validityCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                            labelText: 'صلاحية الحساب (أيام)'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _priceCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                            labelText: 'سعر البيع (ر.ي)'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 10),
@@ -262,10 +415,15 @@ class _VoucherGeneratorScreenState
             const SizedBox(height: 24),
             _GeneratedSection(
               codes: _generated,
+              router: widget.router,
               networks: networks.value ?? [],
               categories: categories.value ?? [],
               networkId: _networkId,
               categoryId: _categoryId,
+              templates: _templates,
+              template: _template,
+              onTemplateChanged: (t) => setState(() => _template = t),
+              onTemplatesUpdated: _loadTemplates,
               onNetworkChanged: (v) => setState(() {
                 _networkId = v;
                 _categoryId = null;
@@ -283,10 +441,15 @@ class _VoucherGeneratorScreenState
 
 class _GeneratedSection extends StatelessWidget {
   final List<String> codes;
+  final MikrotikRouterConfig router;
   final List<Map<String, dynamic>> networks;
   final List<Map<String, dynamic>> categories;
   final int? networkId;
   final int? categoryId;
+  final List<CardTemplate> templates;
+  final CardTemplate? template;
+  final ValueChanged<CardTemplate?> onTemplateChanged;
+  final VoidCallback onTemplatesUpdated;
   final ValueChanged<int?> onNetworkChanged;
   final ValueChanged<int?> onCategoryChanged;
   final VoidCallback onUpload;
@@ -294,10 +457,15 @@ class _GeneratedSection extends StatelessWidget {
 
   const _GeneratedSection({
     required this.codes,
+    required this.router,
     required this.networks,
     required this.categories,
     required this.networkId,
     required this.categoryId,
+    required this.templates,
+    required this.template,
+    required this.onTemplateChanged,
+    required this.onTemplatesUpdated,
     required this.onNetworkChanged,
     required this.onCategoryChanged,
     required this.onUpload,
@@ -339,7 +507,7 @@ class _GeneratedSection extends StatelessWidget {
             shrinkWrap: true,
             padding: const EdgeInsets.all(12),
             itemCount: codes.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const Divider(height: 12, color: AppColors.divider),
             itemBuilder: (_, i) => Text(
               codes[i],
@@ -350,6 +518,107 @@ class _GeneratedSection extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 8),
+        // ── Print / export with templates ──
+        Row(
+          children: [
+            const Text('الطباعة والتصدير',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 14)),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) =>
+                      CardTemplatesScreen(router: router),
+                ));
+                onTemplatesUpdated();
+              },
+              icon: const Icon(Icons.style_outlined, size: 16),
+              label: const Text('إدارة القوالب'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (templates.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3)),
+            ),
+            child: const Text(
+              'لا توجد قوالب — صمّم قالباً أولاً من «إدارة القوالب» لتتمكن من طباعة الكروت أو تصديرها',
+              style:
+                  TextStyle(fontSize: 12, color: AppColors.textGray),
+            ),
+          )
+        else ...[
+          DropdownButtonFormField<String>(
+            initialValue: template?.id,
+            decoration: const InputDecoration(
+              labelText: 'قالب الطباعة',
+              prefixIcon: Icon(Icons.style_outlined),
+            ),
+            items: templates
+                .map((t) => DropdownMenuItem(
+                    value: t.id, child: Text(t.name)))
+                .toList(),
+            onChanged: (id) => onTemplateChanged(
+                templates.where((t) => t.id == id).firstOrNull),
+          ),
+          if (template != null) ...[
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 1.55,
+              ),
+              itemCount: codes.length > 6 ? 6 : codes.length,
+              itemBuilder: (_, i) => VoucherCardView(
+                  template: template!, code: codes[i], qrSize: 46),
+            ),
+            if (codes.length > 6)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text('+${codes.length - 6} كرت آخر — كلها في الملف',
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textGray)),
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        VoucherPrintService.print(codes, template!),
+                    icon: const Icon(Icons.print_outlined),
+                    label: const Text('طباعة'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        VoucherPrintService.sharePdf(codes, template!),
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('مشاركة PDF'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 8),

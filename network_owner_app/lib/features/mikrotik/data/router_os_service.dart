@@ -74,27 +74,415 @@ class RouterOsService {
       _client.talk(['/ip/hotspot/user/profile/print']);
 
   /// Creates one hotspot user (a voucher code) on the router.
+  ///
+  /// [limitBytesTotal] maps to `limit-bytes-total` (download+upload
+  /// quota). [validityDays] and [price] are recorded inside the
+  /// comment as `v:Nd` / `p:N` so the data survives on the router
+  /// and stays parseable for later sync — RouterOS has no native
+  /// account-validity-days field for hotspot users.
   Future<void> addHotspotUser({
     required String name,
     String? password,
     String? profile,
     String? comment,
     String? limitUptime,
+    int? limitBytesTotal,
+    int? validityDays,
+    int? price,
   }) async {
     final params = <String, String>{'name': name};
     if (password != null && password.isNotEmpty) {
       params['password'] = password;
     }
     if (profile != null && profile.isNotEmpty) params['profile'] = profile;
-    if (comment != null && comment.isNotEmpty) params['comment'] = comment;
+    final meta = <String>[
+      if (comment != null && comment.isNotEmpty) comment,
+      if (validityDays != null && validityDays > 0) 'v:${validityDays}d',
+      if (price != null && price > 0) 'p:$price',
+    ];
+    if (meta.isNotEmpty) params['comment'] = meta.join(' ');
     if (limitUptime != null && limitUptime.isNotEmpty) {
       params['limit-uptime'] = limitUptime;
+    }
+    if (limitBytesTotal != null && limitBytesTotal > 0) {
+      params['limit-bytes-total'] = '$limitBytesTotal';
     }
     await _client.talk(['/ip/hotspot/user/add'], params);
   }
 
   Future<void> removeHotspotUser(String id) =>
       _client.talk(['/ip/hotspot/user/remove'], {'numbers': id});
+
+  /// Deletes several users in one call (numbers accepts "id1,id2,...").
+  Future<void> removeHotspotUsers(List<String> ids) =>
+      _client.talk(['/ip/hotspot/user/remove'], {'numbers': ids.join(',')});
+
+  /// Updates arbitrary attributes of one user (password/profile/comment/
+  /// limit-uptime...). Keys are RouterOS attribute names.
+  Future<void> setHotspotUser(String id, Map<String, String> attrs) =>
+      _client.talk(['/ip/hotspot/user/set'], {'numbers': id, ...attrs});
+
+  Future<void> enableHotspotUsers(List<String> ids) =>
+      _client.talk(['/ip/hotspot/user/enable'], {'numbers': ids.join(',')});
+
+  Future<void> disableHotspotUsers(List<String> ids) =>
+      _client.talk(['/ip/hotspot/user/disable'], {'numbers': ids.join(',')});
+
+  /// Kicks an active hotspot session (forces re-login or drop).
+  Future<void> disconnectHotspotActive(String id) =>
+      _client.talk(['/ip/hotspot/active/remove'], {'numbers': id});
+
+  // ── Hotspot profiles (packages) ────────────────────────────────
+
+  Future<void> addHotspotProfile({
+    required String name,
+    String? rateLimit,
+    String? sharedUsers,
+    String? sessionTimeout,
+    String? onLogin,
+    String? onLogout,
+    String? comment,
+  }) async {
+    final p = <String, String>{'name': name};
+    void opt(String k, String? v) {
+      if (v != null && v.isNotEmpty) p[k] = v;
+    }
+
+    opt('rate-limit', rateLimit);
+    opt('shared-users', sharedUsers);
+    opt('session-timeout', sessionTimeout);
+    opt('on-login', onLogin);
+    opt('on-logout', onLogout);
+    opt('comment', comment);
+    await _client.talk(['/ip/hotspot/user/profile/add'], p);
+  }
+
+  Future<void> setHotspotProfile(String id, Map<String, String> attrs) =>
+      _client.talk(['/ip/hotspot/user/profile/set'],
+          {'numbers': id, ...attrs});
+
+  Future<void> removeHotspotProfile(String id) =>
+      _client.talk(['/ip/hotspot/user/profile/remove'], {'numbers': id});
+
+  // ── PPP (PPPoE / Broadband) ────────────────────────────────────
+
+  Future<List<Map<String, String>>> pppSecrets() =>
+      _client.talk(['/ppp/secret/print']);
+
+  Future<List<Map<String, String>>> pppActive() =>
+      _client.talk(['/ppp/active/print']);
+
+  Future<List<Map<String, String>>> pppProfiles() =>
+      _client.talk(['/ppp/profile/print']);
+
+  Future<void> addPppSecret({
+    required String name,
+    required String password,
+    String? service,
+    String? profile,
+    String? remoteAddress,
+    String? routes,
+    String? comment,
+    bool disabled = false,
+  }) async {
+    final p = <String, String>{'name': name, 'password': password};
+    void opt(String k, String? v) {
+      if (v != null && v.isNotEmpty) p[k] = v;
+    }
+
+    opt('service', service);
+    opt('profile', profile);
+    opt('remote-address', remoteAddress);
+    opt('routes', routes);
+    opt('comment', comment);
+    if (disabled) p['disabled'] = 'yes';
+    await _client.talk(['/ppp/secret/add'], p);
+  }
+
+  Future<void> setPppSecret(String id, Map<String, String> attrs) =>
+      _client.talk(['/ppp/secret/set'], {'numbers': id, ...attrs});
+
+  Future<void> removePppSecrets(List<String> ids) =>
+      _client.talk(['/ppp/secret/remove'], {'numbers': ids.join(',')});
+
+  Future<void> enablePppSecrets(List<String> ids) =>
+      _client.talk(['/ppp/secret/enable'], {'numbers': ids.join(',')});
+
+  Future<void> disablePppSecrets(List<String> ids) =>
+      _client.talk(['/ppp/secret/disable'], {'numbers': ids.join(',')});
+
+  /// Kicks an active PPP session.
+  Future<void> disconnectPppActive(String id) =>
+      _client.talk(['/ppp/active/remove'], {'numbers': id});
+
+  // ── User Manager ───────────────────────────────────────────────
+
+  Future<List<Map<String, String>>> umUsers() =>
+      _client.talk(['/user-manager/user/print']);
+
+  Future<List<Map<String, String>>> umProfiles() =>
+      _client.talk(['/user-manager/profile/print']);
+
+  Future<void> addUmUser({
+    required String name,
+    required String password,
+    String? sharedUsers,
+    String? comment,
+    bool disabled = false,
+  }) async {
+    final p = <String, String>{'name': name, 'password': password};
+    if (sharedUsers != null && sharedUsers.isNotEmpty) {
+      p['shared-users'] = sharedUsers;
+    }
+    if (comment != null && comment.isNotEmpty) p['comment'] = comment;
+    if (disabled) p['disabled'] = 'yes';
+    await _client.talk(['/user-manager/user/add'], p);
+  }
+
+  Future<void> setUmUser(String id, Map<String, String> attrs) =>
+      _client.talk(['/user-manager/user/set'], {'numbers': id, ...attrs});
+
+  Future<void> removeUmUsers(List<String> ids) =>
+      _client.talk(['/user-manager/user/remove'], {'numbers': ids.join(',')});
+
+  /// User-Manager package/profile (name/price/validity/shared-users...).
+  Future<void> addUmProfile(Map<String, String> attrs) =>
+      _client.talk(['/user-manager/profile/add'], attrs);
+
+  Future<void> setUmProfile(String id, Map<String, String> attrs) =>
+      _client.talk(['/user-manager/profile/set'], {'numbers': id, ...attrs});
+
+  Future<void> removeUmProfile(String id) =>
+      _client.talk(['/user-manager/profile/remove'], {'numbers': id});
+
+  // ── Monitoring & diagnostics ───────────────────────────────────
+
+  /// One traffic sample for an interface (rx/tx bits-per-second).
+  /// Poll this for a live-speed chart — `monitor-traffic` with `once`
+  /// returns immediately instead of streaming, so it plays nicely
+  /// with the request/response client.
+  Future<Map<String, String>> interfaceMonitorOnce(String name) async {
+    final res = await _client.talk(
+      ['/interface/monitor-traffic'],
+      {'numbers': name, 'once': ''},
+    );
+    return res.isNotEmpty ? res.first : {};
+  }
+
+  /// Interface list with running state + type (for pickers/counters).
+  Future<List<Map<String, String>>> interfaceDetails() =>
+      _client.talk(['/interface/print']);
+
+  /// System health sensors (temperature, voltage, fan) — empty on
+  /// boards without sensors; the UI shows "غير متوفر".
+  Future<List<Map<String, String>>> systemHealth() =>
+      _client.talk(['/system/health/print']);
+
+  /// Discovered neighbor devices (MNDP/CDP).
+  Future<List<Map<String, String>>> neighbors() =>
+      _client.talk(['/ip/neighbor/print']);
+
+  /// Currently attached hotspot hosts (connected devices count).
+  Future<List<Map<String, String>>> hotspotHosts() =>
+      _client.talk(['/ip/hotspot/host/print']);
+
+  Future<List<Map<String, String>>> dhcpLeases() =>
+      _client.talk(['/ip/dhcp-server/lease/print']);
+
+  Future<List<Map<String, String>>> systemLogs() =>
+      _client.talk(['/log/print']);
+
+  /// Executes /ping — returns one row per reply (seq, time, size).
+  Future<List<Map<String, String>>> ping(String host,
+      {int count = 4}) {
+    return _client.talk(
+      ['/ping'],
+      {'address': host, 'count': '$count'},
+    );
+  }
+
+  /// HTTP(S) fetch from the router (download test / API calls).
+  Future<List<Map<String, String>>> fetchUrl(
+    String url, {
+    String? method,
+    String? httpHeaderField,
+    String? httpData,
+    bool keepResult = true,
+  }) {
+    final p = <String, String>{'url': url};
+    if (method != null) p['http-method'] = method;
+    if (httpHeaderField != null) p['http-header-field'] = httpHeaderField;
+    if (httpData != null) p['http-data'] = httpData;
+    p['keep-result'] = keepResult ? 'yes' : 'no';
+    return _client.talk(['/tool/fetch'], p);
+  }
+
+  // ── Netwatch ───────────────────────────────────────────────────
+
+  Future<List<Map<String, String>>> netwatch() =>
+      _client.talk(['/tool/netwatch/print']);
+
+  Future<void> addNetwatch({
+    required String host,
+    String? type,
+    String? interval,
+    String? timeout,
+    String? comment,
+  }) async {
+    final p = <String, String>{'host': host};
+    void opt(String k, String? v) {
+      if (v != null && v.isNotEmpty) p[k] = v;
+    }
+
+    opt('type', type);
+    opt('interval', interval);
+    opt('timeout', timeout);
+    opt('comment', comment);
+    await _client.talk(['/tool/netwatch/add'], p);
+  }
+
+  Future<void> setNetwatch(String id, Map<String, String> attrs) =>
+      _client.talk(['/tool/netwatch/set'], {'numbers': id, ...attrs});
+
+  Future<void> removeNetwatch(String id) =>
+      _client.talk(['/tool/netwatch/remove'], {'numbers': id});
+
+  // ── Generic table operations (advanced-network sections) ───────
+  // One API for every RouterOS menu: keeps 14+ admin tables behind a
+  // single typed surface instead of bespoke methods per table.
+
+  Future<List<Map<String, String>>> table(String path,
+          {String? proplist, String? query}) =>
+      _client.talk([
+        '$path/print',
+        if (proplist != null) '=.proplist=$proplist',
+        ?query,
+      ]);
+
+  Future<void> tableAdd(String path, Map<String, String> attrs) =>
+      _client.talk(['$path/add'], attrs);
+
+  Future<void> tableSet(
+          String path, String id, Map<String, String> attrs) =>
+      _client.talk(['$path/set'], {'numbers': id, ...attrs});
+
+  Future<void> tableRemove(String path, List<String> ids) =>
+      _client.talk(['$path/remove'], {'numbers': ids.join(',')});
+
+  Future<void> tableEnable(String path, List<String> ids) =>
+      _client.talk(['$path/enable'], {'numbers': ids.join(',')});
+
+  Future<void> tableDisable(String path, List<String> ids) =>
+      _client.talk(['$path/disable'], {'numbers': ids.join(',')});
+
+  // ── Remote access (DDNS / API-SSL / certificates) ──────────────
+
+  /// `/ip/cloud` — MikroTik cloud DDNS state (dns-name, public IP).
+  Future<Map<String, String>> cloudStatus() async {
+    final res = await _client.talk(['/ip/cloud/print']);
+    return res.isNotEmpty ? res.first : {};
+  }
+
+  /// `/ip/cloud/set` — enable DDNS or adjust update-time.
+  Future<void> setCloud(Map<String, String> attrs) =>
+      _client.talk(['/ip/cloud/set'], attrs);
+
+  /// `/ip/service` — api / api-ssl / winbox / ssh service rows.
+  Future<List<Map<String, String>>> ipServices() => table('/ip/service');
+
+  Future<void> setIpService(String id, Map<String, String> attrs) =>
+      tableSet('/ip/service', id, attrs);
+
+  Future<List<Map<String, String>>> certificates() =>
+      table('/certificate');
+
+  /// Creates a self-signed server cert request — must be followed by
+  /// [signCertificate] before api-ssl can use it.
+  Future<void> addCertificate(Map<String, String> attrs) =>
+      _client.talk(['/certificate/add'], attrs);
+
+  Future<void> signCertificate(String idOrName) =>
+      _client.talk(['/certificate/sign'], {'numbers': idOrName});
+
+  // ── System administration ──────────────────────────────────────
+
+  Future<void> reboot() => _client.talk(['/system/reboot']);
+
+  /// Creates a binary backup file on the router (no download —
+  /// file transfer needs FTP; see ROADMAP note).
+  Future<void> createBackup(String name) =>
+      _client.talk(['/system/backup/save'], {'name': name});
+
+  /// Restores a backup file — router reboots during load.
+  Future<void> loadBackup(String name) =>
+      _client.talk(['/system/backup/load'], {'name': name});
+
+  /// Creates a text .rsc export script.
+  Future<void> exportConfig({String? file}) =>
+      _client.talk(['/export'], {'file': ?file});
+
+  Future<List<Map<String, String>>> files() =>
+      _client.talk(['/file/print']);
+
+  /// Runs a script by name (e.g. /system/script/run).
+  Future<void> runScript(String name) =>
+      _client.talk(['/system/script/run'], {'number': name});
+
+  Future<List<Map<String, String>>> systemUsers() =>
+      _client.talk(['/user/print']);
+
+  Future<void> addSystemUser({
+    required String name,
+    required String password,
+    String group = 'read',
+    String? comment,
+  }) =>
+      _client.talk([
+        '/user/add'
+      ], {
+        'name': name,
+        'password': password,
+        'group': group,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      });
+
+  Future<void> setSystemUser(String id, Map<String, String> attrs) =>
+      _client.talk(['/user/set'], {'numbers': id, ...attrs});
+
+  Future<void> removeSystemUser(String id) =>
+      _client.talk(['/user/remove'], {'numbers': id});
+
+  Future<List<Map<String, String>>> systemGroups() =>
+      _client.talk(['/user/group/print']);
+
+  Future<void> addSystemGroup({
+    required String name,
+    required List<String> policies,
+    String? comment,
+  }) =>
+      _client.talk([
+        '/user/group/add'
+      ], {
+        'name': name,
+        'policy': policies.join(','),
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      });
+
+  Future<void> setSystemGroup(String id, Map<String, String> attrs) =>
+      _client.talk(['/user/group/set'], {'numbers': id, ...attrs});
+
+  Future<void> removeSystemGroup(String id) =>
+      _client.talk(['/user/group/remove'], {'numbers': id});
+
+  // ── Hotspot server profiles (login-page settings) ──────────────
+
+  Future<List<Map<String, String>>> hotspotServerProfiles() =>
+      _client.talk(['/ip/hotspot/profile/print']);
+
+  Future<void> setHotspotServerProfile(
+          String id, Map<String, String> attrs) =>
+      _client.talk(['/ip/hotspot/profile/set'],
+          {'numbers': id, ...attrs});
 }
 
 /// Generates random voucher codes (uppercase letters + digits,

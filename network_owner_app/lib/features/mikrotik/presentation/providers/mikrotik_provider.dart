@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/router_model.dart';
 import '../../data/router_os_service.dart';
 import '../../data/router_store.dart';
+import '../../data/router_sync.dart';
 
 /// Saved router profiles (loaded from secure storage).
 final routersProvider =
@@ -29,13 +32,31 @@ class RoutersNotifier extends AsyncNotifier<List<MikrotikRouterConfig>> {
 final connectionTestProvider =
     StateProvider.autoDispose<AsyncValue<String>?>((ref) => null);
 
+/// Opens a short-lived connection for a single router operation
+/// (edit/delete/enable/disconnect...), always closes it afterwards.
+/// Screens then invalidate [routerSessionProvider] to refresh.
+Future<T> runRouterOp<T>(
+  MikrotikRouterConfig cfg,
+  Future<T> Function(RouterOsService svc) op,
+) async {
+  final svc = await RouterOsService.connect(cfg);
+  try {
+    return await op(svc);
+  } finally {
+    svc.close();
+  }
+}
+
 /// Currently connected router + live session snapshot for the dashboard.
 /// Keyed by router id — each screen fetch manages its own session lifetime.
 final routerSessionProvider = FutureProvider.autoDispose
     .family<RouterSnapshot, MikrotikRouterConfig>((ref, cfg) async {
   final svc = await RouterOsService.connect(cfg);
   ref.onDispose(svc.close);
-  return RouterSnapshot.load(svc);
+  final snap = await RouterSnapshot.load(svc);
+  // Best-effort registry sync — never blocks the dashboard.
+  unawaited(RouterSyncService.sync(ref, cfg, snap: snap));
+  return snap;
 });
 
 class RouterSnapshot {

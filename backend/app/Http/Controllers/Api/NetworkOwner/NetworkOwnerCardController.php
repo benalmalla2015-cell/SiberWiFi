@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\NetworkOwner;
 use App\Http\Controllers\Controller;
 use App\Models\Card;
 use App\Models\CardCategory;
+use App\Models\MikrotikRouter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -246,13 +247,19 @@ class NetworkOwnerCardController extends Controller
             'codes' => 'nullable|array|min:1',
             'codes.*' => 'nullable|string|max:255',
             'cards_file' => 'nullable|file|mimes:csv,xls,xlsx,xml,txt|max:10240',
+            'source' => 'nullable|in:platform,mikrotik',
+            'router_id' => 'nullable|integer|exists:mikrotik_routers,id',
+            'meta' => 'nullable|array',
+            'items' => 'nullable|array',
+            'items.*.code' => 'required_with:items|string|max:255',
+            'items.*.meta' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        if (! $request->hasFile('cards_file') && ! $request->filled('codes')) {
+        if (! $request->hasFile('cards_file') && ! $request->filled('codes') && ! $request->filled('items')) {
             return response()->json([
                 'success' => false,
                 'message' => 'يرجى إدخال أكواد الكروت أو رفع ملف',
@@ -264,6 +271,21 @@ class NetworkOwnerCardController extends Controller
         if (!in_array($request->network_id, $networkIds)) {
             return response()->json(['success' => false, 'message' => 'غير مصرح لك بهذه الشبكة'], 403);
         }
+
+        // A router-tagged upload must reference one of the owner's routers.
+        $routerId = null;
+        if ($request->filled('router_id')) {
+            $ownsRouter = MikrotikRouter::where('user_id', $request->user()->id)
+                ->whereKey((int) $request->router_id)
+                ->exists();
+            if (! $ownsRouter) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بهذا الراوتر'], 403);
+            }
+            $routerId = (int) $request->router_id;
+        }
+
+        $source = $request->input('source', 'platform');
+        $batchMeta = $request->filled('meta') ? $request->input('meta') : null;
 
         $category = CardCategory::where('network_id', $request->network_id)->findOrFail($request->category_id);
 
@@ -277,6 +299,17 @@ class NetworkOwnerCardController extends Controller
             $codes = array_merge($codes, $request->input('codes', []));
         }
 
+        // items[] carries per-card meta (e.g. RouterOS profile) alongside
+        // the code — used when importing existing router hotspot users.
+        $perCodeMeta = [];
+        foreach ((array) $request->input('items', []) as $item) {
+            if (!is_array($item) || empty($item['code'])) {
+                continue;
+            }
+            $perCodeMeta[trim((string) $item['code'])] = $item['meta'] ?? null;
+        }
+        $codes = array_merge($codes, array_keys($perCodeMeta));
+
         $codes = array_map('trim', $codes);
         $codes = array_unique(array_filter($codes));
 
@@ -288,16 +321,22 @@ class NetworkOwnerCardController extends Controller
         }
 
         $now = now();
-        $cards = array_map(fn($code) => [
-            'network_id' => $request->network_id,
-            'category_id' => $category->id,
-            'card_number' => $code,
-            'code' => $code,
-            'serial' => $code,
-            'status' => 'available',
-            'created_at' => $now,
-            'updated_at' => $now,
-        ], $codes);
+        $cards = array_map(function ($code) use ($request, $category, $now, $source, $routerId, $batchMeta, $perCodeMeta) {
+            $meta = array_key_exists($code, $perCodeMeta) ? $perCodeMeta[$code] : $batchMeta;
+            return [
+                'network_id' => $request->network_id,
+                'category_id' => $category->id,
+                'router_id' => $routerId,
+                'card_number' => $code,
+                'code' => $code,
+                'serial' => $code,
+                'status' => 'available',
+                'source' => $source,
+                'meta' => $meta === null ? null : json_encode($meta, JSON_UNESCAPED_UNICODE),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }, $codes);
 
         $inserted = 0;
         foreach (array_chunk($cards, 500) as $chunk) {
