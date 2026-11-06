@@ -1,0 +1,120 @@
+# -*- text -*-
+# =============================================================================
+# CyberNet — default virtual server (auth :1812, acct :1813)
+#
+# Trimmed for the CyberNet model: EAP-TLS certificates are the credential,
+# `files` supplies static policy for the pilot. No sql/ldap/krb — the
+# engine pushes session state to the backend out of band.
+# =============================================================================
+
+server default {
+
+listen {
+	type = auth
+	ipaddr = *
+	port = 1812
+
+	limit {
+		max_connections = 16
+		lifetime = 0
+		idle_timeout = 30
+	}
+}
+
+listen {
+	ipaddr = *
+	port = 1813
+	type = acct
+
+	limit {
+	}
+}
+
+# --------------------------------------------------------------------------
+# authorize: sanitize identity -> EAP -> static policy -> time checks
+# --------------------------------------------------------------------------
+authorize {
+	filter_username
+
+	preprocess
+
+	# EAP-TLS handles the credential check; `ok = return` stops here for EAP.
+	eap {
+		ok = return
+	}
+
+	files
+
+	-expiration
+	-logintime
+}
+
+# --------------------------------------------------------------------------
+authenticate {
+	eap
+}
+
+# --------------------------------------------------------------------------
+# accounting: append every Acct packet to the per-NAS detail ledger.
+# The engine container replays these to the Laravel backend.
+# --------------------------------------------------------------------------
+accounting {
+	detail
+
+	unix
+
+	exec
+
+	attr_filter.accounting_response
+}
+
+session {
+	radutmp
+}
+
+# --------------------------------------------------------------------------
+post-auth {
+	# Stamp the outcome, then record the auth in the ledger — the engine
+	# reads Tmp-String-0 to classify auth.accept / auth.reject events.
+	update request {
+		&Tmp-String-0 := "Access-Accept"
+	}
+	cyberauth
+
+	if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
+		update reply {
+			&User-Name !* ANY
+		}
+	}
+
+	update {
+		&reply: += &session-state:
+	}
+
+	exec
+
+	remove_reply_message_if_eap
+
+	Post-Auth-Type REJECT {
+		# Record every rejection too (revoked/foreign certs, bad host secret).
+		update request {
+			&Tmp-String-0 := "Access-Reject"
+		}
+		cyberauth
+
+		attr_filter.access_reject
+
+		eap
+
+		remove_reply_message_if_eap
+	}
+}
+
+pre-proxy {
+}
+
+post-proxy {
+	eap
+}
+
+}

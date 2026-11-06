@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{network_name}} — تسجيل الدخول</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: linear-gradient(135deg, {{color_primary}} 0%, {{color_accent}} 100%);
+  overflow-x: hidden; }
+.orb { position: fixed; border-radius: 50%; filter: blur(60px); opacity: .5; pointer-events: none; }
+.orb.o1 { width: 300px; height: 300px; background: #fff; top: -80px; right: -60px; }
+.orb.o2 { width: 260px; height: 260px; background: {{color_accent}}; bottom: -70px; left: -50px; }
+.card { width: 100%; max-width: 390px; padding: 36px 28px 26px; text-align: center;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35);
+  border-radius: 26px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0,0,0,.22); animation: up .5s ease both; }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; } }
+.logo { max-height: 62px; max-width: 140px; margin-bottom: 8px; }
+h1 { font-size: 25px; color: #fff; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,.2); }
+.sub { color: rgba(255,255,255,.85); font-size: 13px; margin: 8px 0 20px; line-height: 1.7; }
+.speed { display: inline-block; background: rgba(255,255,255,.2); color: #fff;
+  border: 1px solid rgba(255,255,255,.4); border-radius: 999px; font-size: 12px;
+  font-weight: 700; padding: 4px 14px; margin-bottom: 14px; }
+.speed:empty { display: none; }
+input[type=text], input[type=password] { width: 100%; padding: 15px 16px; margin-bottom: 13px;
+  border: 1px solid rgba(255,255,255,.4); border-radius: 14px;
+  background: rgba(255,255,255,.16); font-size: 15px; font-family: inherit;
+  text-align: center; color: #fff; transition: background .15s, border .15s; }
+input::placeholder { color: rgba(255,255,255,.7); }
+input:focus { outline: none; background: rgba(255,255,255,.25); border-color: #fff; }
+.rem { display: flex; align-items: center; gap: 8px; justify-content: center;
+  font-size: 12px; color: rgba(255,255,255,.85); margin: 0 0 14px; cursor: pointer; }
+.rem input { accent-color: #fff; width: 15px; height: 15px; }
+button { width: 100%; padding: 15px; border: 0; border-radius: 14px; background: #fff;
+  color: {{color_primary}}; font-size: 16px; font-weight: 800; font-family: inherit;
+  cursor: pointer; box-shadow: 0 12px 28px rgba(0,0,0,.2); transition: transform .12s; }
+button:hover { transform: translateY(-1px); }
+.error { background: rgba(255,60,60,.25); border: 1px solid rgba(255,120,120,.5);
+  color: #fff; border-radius: 12px; padding: 11px; font-size: 13px; margin-bottom: 14px; }
+.trial { margin-top: 17px; font-size: 13px; color: rgba(255,255,255,.8); }
+.trial a { color: #fff; font-weight: 800; }
+.foot { margin-top: 22px; font-size: 12px; color: rgba(255,255,255,.7); }
+.foot a { color: #fff; font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+$(if chap-id)
+<form name="sendin" action="$(link-login-only)" method="post">
+<input type="hidden" name="username" />
+<input type="hidden" name="password" />
+<input type="hidden" name="dst" value="$(link-orig)" />
+<input type="hidden" name="popup" value="true" />
+</form>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript">
+function doLogin() {
+  document.sendin.username.value = document.login.username.value;
+  document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+  document.sendin.submit();
+  return false;
+}
+</script>
+$(endif)
+
+<div class="orb o1"></div><div class="orb o2"></div>
+<div class="card">
+  {{logo}}
+  <h1>{{network_name}}</h1>
+  <div class="sub">{{welcome_msg}}</div>
+  <div class="speed">⚡ {{speed_label}}</div>
+  $(if error)<div class="error">$(error)</div>$(endif)
+  <form name="login" action="$(link-login-only)" method="post"
+        $(if chap-id) onSubmit="return doLogin()" $(endif)>
+    <input type="hidden" name="dst" value="$(link-orig)" />
+    <input type="hidden" name="popup" value="true" />
+    <input name="username" type="text" value="$(username)" placeholder="اسم المستخدم / رقم الكرت" autocomplete="username" />
+    <input name="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+    <label class="rem"><input type="checkbox" id="rem"> تذكر بياناتي</label>
+    <button type="submit">دخول</button>
+  </form>
+  $(if trial == 'yes')
+  <div class="trial"><a href="$(link-login-only)?dst=$(link-orig-esc)&amp;username=T-$(mac-esc)">دخول تجريبي مجاني ←</a></div>
+  $(endif)
+  <div class="foot">{{support_line}}</div>
+</div>
+<script type="text/javascript">
+(function(){
+  var un = document.login.username, pw = document.login.password, rem = document.getElementById('rem');
+  try {
+    var s = localStorage.getItem('wifi_card');
+    if (s) { var d = JSON.parse(s); if (d.u) { un.value = d.u; pw.value = d.p || d.u; } if (rem) rem.checked = true; }
+  } catch(e) {}
+  document.login.addEventListener('submit', function(){
+    try {
+      if (rem && rem.checked) localStorage.setItem('wifi_card', JSON.stringify({u: un.value, p: pw.value}));
+      else localStorage.removeItem('wifi_card');
+    } catch(e) {}
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{network_name}} — تسجيل الدخول</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: linear-gradient(160deg, {{color_primary}} 0%, {{color_accent}} 160%); }
+.card { width: 100%; max-width: 400px; background: #fff; border-radius: 22px;
+  padding: 34px 28px 24px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28); animation: up .45s ease both; }
+@keyframes up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; } }
+.logo { max-height: 64px; max-width: 140px; margin-bottom: 8px; }
+h1 { font-size: 24px; color: #0f1f3d; font-weight: 800; }
+.sub { color: #64748b; font-size: 13px; margin: 6px 0 18px; line-height: 1.7; }
+.speed { display: inline-block; background: #fef3c7; color: #92400e; border-radius: 999px;
+  font-size: 12px; font-weight: 700; padding: 4px 14px; margin-bottom: 14px; }
+.speed:empty { display: none; }
+.modes { display: flex; background: #eef2f7; border-radius: 13px; padding: 4px;
+  margin-bottom: 18px; gap: 4px; }
+.mode { flex: 1; border: 0; background: transparent; padding: 11px; border-radius: 10px;
+  font: inherit; font-size: 14px; font-weight: 700; color: #64748b; cursor: pointer;
+  transition: all .18s; width: auto; box-shadow: none; }
+.mode.on { background: #fff; color: {{color_primary}};
+  box-shadow: 0 3px 10px rgba(0,0,0,.09); }
+input[type=text], input[type=password] { width: 100%; padding: 15px 16px; margin-bottom: 12px;
+  border: 2px solid #e2e8f0; border-radius: 13px; font-size: 15px; font-family: inherit;
+  text-align: center; transition: border .15s; }
+input:focus { outline: none; border-color: {{color_accent}}; }
+.rem { display: flex; align-items: center; gap: 8px; justify-content: center;
+  font-size: 12px; color: #64748b; margin: 2px 0 14px; cursor: pointer; }
+.rem input { accent-color: {{color_accent}}; width: 15px; height: 15px; }
+button.btn { width: 100%; padding: 15px; border: 0; border-radius: 13px;
+  background: linear-gradient(135deg, {{color_accent}}, {{color_primary}} 180%);
+  color: #fff; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
+  box-shadow: 0 10px 24px rgba(37,99,235,.3); transition: transform .12s; }
+button.btn:hover { transform: translateY(-1px); }
+.error { background: #fdecea; color: #b3261e; border-radius: 11px; padding: 11px;
+  font-size: 13px; margin-bottom: 14px; }
+.trial { margin-top: 16px; font-size: 13px; color: #64748b; }
+.trial a { color: {{color_accent}}; font-weight: 800; text-decoration: none; }
+.foot { margin-top: 22px; font-size: 12px; color: #94a3b8; }
+.foot a { color: {{color_primary}}; font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+$(if chap-id)
+<form name="sendin" action="$(link-login-only)" method="post">
+<input type="hidden" name="username" />
+<input type="hidden" name="password" />
+<input type="hidden" name="dst" value="$(link-orig)" />
+<input type="hidden" name="popup" value="true" />
+</form>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript">
+function doLogin() {
+  document.sendin.username.value = document.login.username.value;
+  document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+  document.sendin.submit();
+  return false;
+}
+</script>
+$(endif)
+
+<div class="card">
+  {{logo}}
+  <h1>{{network_name}}</h1>
+  <div class="sub">{{welcome_msg}}</div>
+  <div class="speed">⚡ {{speed_label}}</div>
+  $(if error)<div class="error">$(error)</div>$(endif)
+  <div class="modes">
+    <button type="button" class="mode on" id="mCard" onclick="setMode('card')">🎫 كرت</button>
+    <button type="button" class="mode" id="mUser" onclick="setMode('user')">👤 حساب</button>
+  </div>
+  <form name="login" action="$(link-login-only)" method="post"
+        $(if chap-id) onSubmit="return doLogin()" $(endif)>
+    <input type="hidden" name="dst" value="$(link-orig)" />
+    <input type="hidden" name="popup" value="true" />
+    <input name="username" type="text" value="$(username)" placeholder="رقم الكرت" autocomplete="off" />
+    <input name="password" type="hidden" placeholder="كلمة المرور" autocomplete="current-password" />
+    <label class="rem"><input type="checkbox" id="rem"> تذكر بياناتي على هذا الجهاز</label>
+    <button type="submit" class="btn">اتصال بالإنترنت</button>
+  </form>
+  $(if trial == 'yes')
+  <div class="trial"><a href="$(link-login-only)?dst=$(link-orig-esc)&amp;username=T-$(mac-esc)">دخول تجريبي مجاني ←</a></div>
+  $(endif)
+  <div class="foot">{{support_line}}</div>
+</div>
+<script type="text/javascript">
+var un = document.login.username, pw = document.login.password;
+function setMode(m) {
+  var card = (m === 'card');
+  document.getElementById('mCard').className = 'mode' + (card ? ' on' : '');
+  document.getElementById('mUser').className = 'mode' + (card ? '' : ' on');
+  pw.type = card ? 'hidden' : 'password';
+  un.placeholder = card ? 'رقم الكرت' : 'اسم المستخدم';
+  un.oninput = card ? function(){ pw.value = un.value; } : null;
+  if (card) pw.value = un.value;
+  un.focus();
+}
+document.login.addEventListener('submit', function(){
+  if (pw.type === 'hidden') pw.value = un.value;
+});
+setMode('card');
+</script>
+<script type="text/javascript">
+(function(){
+  var rem = document.getElementById('rem');
+  try {
+    var s = localStorage.getItem('wifi_card');
+    if (s) { var d = JSON.parse(s); if (d.u) { un.value = d.u; pw.value = d.p || d.u; } if (rem) rem.checked = true; }
+  } catch(e) {}
+  document.login.addEventListener('submit', function(){
+    try {
+      if (rem && rem.checked) localStorage.setItem('wifi_card', JSON.stringify({u: un.value, p: pw.value}));
+      else localStorage.removeItem('wifi_card');
+    } catch(e) {}
+  });
+})();
+</script>
+</body>
+</html>

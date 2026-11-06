@@ -1,0 +1,10 @@
+{
+  "id": "dark",
+  "name": "داكن فاخر",
+  "description": "واجهة ليلية أنيقة بإضاءة مميزة — لمحة راقية لشبكتك",
+  "defaults": {
+    "color_primary": "#141a2e",
+    "color_accent": "#ffb020",
+    "welcome_msg": "مرحباً بك — سجّل دخولك للمتابعة"
+  }
+}

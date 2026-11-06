@@ -112,13 +112,13 @@ class PayoutRequestResource extends Resource
                         'success' => 'received',
                         'danger' => 'rejected',
                     ])
-                    ->formatStateUsing(fn($s) => match($s) {
+                    ->formatStateUsing(fn ($state) => match($state) {
                         'pending' => 'قيد المراجعة',
                         'approved' => 'تمت الموافقة',
                         'paid_unconfirmed' => 'تم الصرف - بانتظار التأكيد',
                         'received' => 'مكتمل',
                         'rejected' => 'مرفوض',
-                        default => $s,
+                        default => $state,
                     }),
                 Tables\Columns\TextColumn::make('created_at')->label('تاريخ الطلب')->dateTime()->sortable(),
             ])

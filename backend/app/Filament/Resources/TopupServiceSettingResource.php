@@ -66,6 +66,45 @@ class TopupServiceSettingResource extends Resource
                 ->label('الترتيب')
                 ->numeric()
                 ->default(0),
+            Forms\Components\Repeater::make('packages')
+                ->label('الباقات وفئات فوري')
+                ->helperText('بطاقات تظهر في التطبيق. «السعر» هو ما يُدفع دائماً؛ «التفعيل» يحدد طريقة التنفيذ لدى المزود.')
+                ->schema([
+                    Forms\Components\TextInput::make('name')->label('الاسم')->required(),
+                    Forms\Components\TextInput::make('code')->label('الكود (معرّف فريد)')->required(),
+                    Forms\Components\TextInput::make('price')->label('السعر')->numeric()->required(),
+                    Forms\Components\TextInput::make('group')
+                        ->label('المجموعة')
+                        ->placeholder('باقات سوا / فوري — فئات / …')
+                        ->helperText('بطاقات نفس المجموعة تُعرض معاً'),
+                    Forms\Components\Select::make('network')
+                        ->label('البوابة')
+                        ->options(['both' => 'الكل', 'south' => 'جنوب فقط', 'north' => 'شمال فقط'])
+                        ->default('both'),
+                    Forms\Components\Select::make('paytype')
+                        ->label('نوع الخط')
+                        ->options(['both' => 'الكل', 'prepaid' => 'مسبق الدفع', 'postpaid' => 'فوترة'])
+                        ->default('both'),
+                    Forms\Components\Select::make('activation')
+                        ->label('التفعيل')
+                        ->options([
+                            'amount' => 'سداد مبلغ (السعر يصل رصيداً)',
+                            'offeryem' => 'تفعيل عرض يمن (offerkey)',
+                            'billoffer' => 'تفعيل عرض يمن (offerid)',
+                            'mtnoffer' => 'باقة MTN (num=الكود)',
+                            'sabaoffer' => 'باقة سبأفون (num=الكود)',
+                        ])
+                        ->default('amount'),
+                    Forms\Components\TextInput::make('data')->label('البيانات (2GB)'),
+                    Forms\Components\TextInput::make('days')->label('المدة بالأيام'),
+                    Forms\Components\TextInput::make('minutes')->label('الدقائق'),
+                    Forms\Components\TextInput::make('sms')->label('الرسائل'),
+                    Forms\Components\TextInput::make('note')->label('ملاحظة'),
+                    Forms\Components\TextInput::make('params')->label('معاملات إضافية (JSON)')->placeholder('{"type":"adsl"}'),
+                ])
+                ->columns(3)
+                ->collapsed()
+                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
             Forms\Components\KeyValue::make('meta.places')
                 ->label('المناطق (معرّف المنطقة ⇒ اسمها)')
                 ->keyLabel('معرّف المنطقة (placeid)')

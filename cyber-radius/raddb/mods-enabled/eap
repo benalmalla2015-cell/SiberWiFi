@@ -1,0 +1,92 @@
+# -*- text -*-
+# =============================================================================
+# CyberNet — EAP module: **EAP-TLS ONLY**
+#
+# Client phones hold a certificate issued by the private CyberNet CA
+# (CN = subscriber number 74XXXXXXX). No passwords, no tunneled methods:
+# any EAP method other than TLS is rejected by negotiation.
+# =============================================================================
+
+eap {
+	# Only TLS is instantiated below, and it is the default — a client
+	# proposing md5/gtc/peap/ttls/mschapv2 gets a NAK offering only tls.
+	default_eap_type = tls
+
+	# Give up on half-finished EAP conversations after 60s.
+	timer_expire = 60
+
+	# Reject unknown/unsupported EAP types outright.
+	ignore_unknown_eap_types = no
+
+	cisco_accounting_username_bug = no
+
+	max_sessions = ${max_requests}
+
+	#
+	# TLS parameters shared by the `tls` sub-module.
+	# Files are dropped into raddb/certs/ by init-ca.sh.
+	#
+	tls-config tls-common {
+		certdir = ${confdir}/certs
+		cadir   = ${confdir}/certs
+
+		# Server identity — issued by the CyberNet CA at init-ca.sh time.
+		private_key_file  = ${certdir}/server.key
+		certificate_file  = ${certdir}/server.crt
+
+		# CyberNet root CA — the ONLY trust anchor for client certs.
+		ca_file           = ${cadir}/ca.crt
+		ca_path           = ${cadir}
+
+		# CRL lives in ca_path (hashed by `openssl rehash` in the PKI
+		# scripts). Revoked subscriber certs are rejected on next auth.
+		check_crl      = yes
+		check_all_crl  = yes
+		allow_expired_crl = no
+
+		dh_file = ${certdir}/dh
+
+		# Pin a sane TLS floor; 1.3 permitted where supported.
+		tls_min_version = "1.2"
+		tls_max_version = "1.3"
+
+		cipher_list = "DEFAULT"
+		cipher_server_preference = yes
+
+		# TLS 1.3 resumption bypasses cert re-checks — keep tickets off so
+		# every session re-presents the client certificate (CRL honored).
+		session_ticket_enable = no
+
+		fragment_size  = 1024
+		include_length = yes
+
+		# Client cert CN must equal the presented User-Name (the 74XXXXXXX
+		# subscriber number) — blocks cert-swapping between identities.
+		# NOTE: the value is an xlat expression, not a boolean — "yes"
+		# would compare the CN against the literal string "yes".
+		check_cert_cn = %{User-Name}
+
+		verify_depth = 3
+
+		verify {
+		}
+
+		ocsp {
+			enable = no
+		}
+
+		staple {
+			enable = no
+		}
+	}
+
+	# EAP-TLS — the only method enabled.
+	tls {
+		tls = tls-common
+	}
+
+	#
+	# Intentionally absent: md5, leap, gtc, pwd, peap, ttls, mschapv2.
+	# With no tunneled methods there is no inner tunnel to configure.
+	#
+}

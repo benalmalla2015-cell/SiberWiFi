@@ -1,0 +1,65 @@
+name: cyber_client_app
+description: "سايبر نت — تطبيق العميل والوكيل (CyberNet)"
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # HTTP
+  dio: ^5.9.2
+
+  # State
+  flutter_riverpod: 2.6.1
+
+  # Secure token storage (agent sanctum token)
+  flutter_secure_storage: ^9.2.4
+
+  # QR scanning — agent reads CYBER:74XXXXXXX codes
+  mobile_scanner: ^7.4.2
+
+  # Device binding (CYB-05): stable device_id + sim storage
+  device_info_plus: ^12.4.0
+  shared_preferences: ^2.5.3
+
+  # Registration documents (camera / gallery)
+  image_picker: ^1.1.2
+
+  # FCM — bound onto cyber_identities via POST /cyber/identity/bind
+  firebase_core: ^3.13.1
+  firebase_messaging: ^15.2.5
+
+  # iOS .mobileconfig hand-off
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+
+  # Formatting
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  crypto: ^3.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700

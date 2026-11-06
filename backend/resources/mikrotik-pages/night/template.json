@@ -1,0 +1,11 @@
+{
+  "id": "night",
+  "name": "نيون ليلي",
+  "description": "أسود عميق بإطارات نيون مضيئة — أسلوب تقني جريء",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#0ea5e9",
+    "color_accent": "#22d3ee",
+    "welcome_msg": "أدخل بياناتك للاتصال بالشبكة"
+  }
+}

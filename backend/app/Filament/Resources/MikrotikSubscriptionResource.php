@@ -50,6 +50,16 @@ class MikrotikSubscriptionResource extends Resource
                 Forms\Components\DateTimePicker::make('ends_at')
                     ->label('النهاية'),
             ]),
+            Forms\Components\CheckboxList::make('granted_features')
+                ->label('ميزات إضافية لهذا الحساب')
+                ->options(MikrotikPlanResource::featureLabels())
+                ->columns(3)
+                ->helperText('تُفتح لهذا المالك حتى لو لم تكن في خطته'),
+            Forms\Components\CheckboxList::make('revoked_features')
+                ->label('ميزات محظورة على هذا الحساب')
+                ->options(MikrotikPlanResource::featureLabels())
+                ->columns(3)
+                ->helperText('تُحجب عن هذا المالك حتى لو اشتراكه نشط'),
         ]);
     }
 
@@ -61,14 +71,14 @@ class MikrotikSubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('plan.name')->label('الخطة')->placeholder('تجربة'),
                 Tables\Columns\TextColumn::make('status')->label('الحالة')
                     ->badge()
-                    ->formatStateUsing(fn($s) => match ($s) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'trial' => 'تجربة',
                         'active' => 'نشط',
                         'expired' => 'منتهٍ',
                         'cancelled' => 'ملغى',
-                        default => $s,
+                        default => $state,
                     })
-                    ->color(fn($s) => match ($s) {
+                    ->color(fn ($state) => match ($state) {
                         'active' => 'success',
                         'trial' => 'info',
                         'expired' => 'danger',
@@ -102,6 +112,7 @@ class MikrotikSubscriptionResource extends Resource
     {
         return [
             'index' => Pages\ListMikrotikSubscriptions::route('/'),
+            'create' => Pages\CreateMikrotikSubscription::route('/create'),
             'edit' => Pages\EditMikrotikSubscription::route('/{record}/edit'),
         ];
     }

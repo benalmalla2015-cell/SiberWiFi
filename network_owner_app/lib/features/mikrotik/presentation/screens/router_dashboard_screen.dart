@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../data/entitlement_service.dart';
 import '../../data/router_model.dart';
 import '../providers/entitlement_provider.dart';
 import '../providers/mikrotik_provider.dart';
@@ -90,6 +91,14 @@ class RouterDashboardScreen extends ConsumerWidget {
                 title: 'قوالب الكروت',
                 subtitle: 'تصميم يدوي أو صوري لطباعة الكروت',
                 onTap: () => context.push('/mikrotik/card-templates',
+                    extra: router),
+              ),
+              _ActionTile(
+                icon: Icons.web_outlined,
+                color: const Color(0xFFEC4899),
+                title: 'صفحات الدخول',
+                subtitle: 'قوالب جاهزة بهوية شبكتك — تُطبَّق على الراوتر',
+                onTap: () => context.push('/mikrotik/hotspot-pages',
                     extra: router),
               ),
               _ActionTile(
@@ -221,18 +230,27 @@ class _SubscriptionBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(entitlementEnforcedProvider)) {
+    // Hidden until the server answers — never show a fake "expired".
+    if (!ref.watch(entitlementLoadedProvider)) {
       return const SizedBox.shrink();
     }
     final daysLeft = ref.watch(trialDaysLeftProvider);
-    final paid = ref.watch(hasPaidAccessProvider);
-    if (paid && daysLeft == null) return const SizedBox.shrink();
+    final svc = EntitlementService.instance;
+    final paid = svc.hasPaidAccess;
 
-    final expired = !paid;
-    final color = expired ? AppColors.accent : const Color(0xFFF59E0B);
-    final text = expired
-        ? 'انتهت صلاحية الاشتراك — رقِّ حسابك لاستعادة كل الميزات'
-        : 'فترة تجريبية — بقي $daysLeft يوم';
+    // Active paid plan still shows (as a green status) so the owner
+    // always has an entry point to manage the subscription.
+    final (color, text) = svc.isActiveSub
+        ? (const Color(0xFF16A34A), 'اشتراك نشط — ${svc.plan}')
+        : paid
+            ? (
+                const Color(0xFFF59E0B),
+                'فترة تجريبية — بقي ${daysLeft ?? 0} يوم'
+              )
+            : (
+                AppColors.accent,
+                'انتهت صلاحية الاشتراك — رقِّ حسابك لاستعادة كل الميزات'
+              );
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -248,7 +266,7 @@ class _SubscriptionBanner extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  expired
+                  !paid
                       ? Icons.error_outline
                       : Icons.workspace_premium_outlined,
                   color: color,

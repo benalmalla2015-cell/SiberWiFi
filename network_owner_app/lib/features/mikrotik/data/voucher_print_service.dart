@@ -64,9 +64,13 @@ class VoucherPrintService {
         borderRadius: pw.BorderRadius.circular(10),
       ),
       padding: const pw.EdgeInsets.all(10),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
+      // RTL directionality is required for the PDF engine to shape
+      // Arabic glyphs correctly (otherwise letters print disjointed).
+      child: pw.Directionality(
+        textDirection: pw.TextDirection.rtl,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
           pw.Text(
             t.networkName.isEmpty ? 'WiFi' : t.networkName,
             style: pw.TextStyle(
@@ -128,7 +132,8 @@ class VoucherPrintService {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

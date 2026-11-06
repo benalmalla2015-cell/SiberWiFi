@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{network_name}} — تسجيل الدخول</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: #0d0d0d; }
+.card { width: 100%; max-width: 390px; padding: 40px 30px 28px; text-align: center;
+  background: #141414; border-radius: 8px; position: relative;
+  border-top: 3px solid {{color_accent}};
+  box-shadow: 0 30px 70px rgba(0,0,0,.6); animation: up .5s ease both; }
+@keyframes up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; } }
+.card::after { content: ''; position: absolute; bottom: 0; right: 10%; left: 10%;
+  height: 1px; background: linear-gradient(90deg, transparent, {{color_accent}}, transparent); }
+.logo { max-height: 60px; max-width: 140px; margin-bottom: 8px; }
+h1 { font-size: 23px; color: #f0e6c8; font-weight: 700; letter-spacing: 2px; }
+.line { width: 50px; height: 1px; margin: 12px auto;
+  background: {{color_accent}}; }
+.sub { color: #8a8578; font-size: 12px; margin: 4px 0 20px; line-height: 1.8; }
+.speed { display: inline-block; color: {{color_accent}}; font-size: 11px;
+  font-weight: 700; letter-spacing: 1px; border: 1px solid rgba(201,162,39,.4);
+  padding: 4px 14px; margin-bottom: 14px; }
+.speed:empty { display: none; }
+.modes { display: flex; border: 1px solid #2a2a2a; margin-bottom: 20px; }
+.mode { flex: 1; border: 0; background: transparent; padding: 12px; font: inherit;
+  font-size: 13px; font-weight: 700; color: #777; cursor: pointer; width: auto;
+  letter-spacing: 1px; transition: all .18s; box-shadow: none; border-radius: 0; }
+.mode.on { background: {{color_accent}}; color: #111; }
+input[type=text], input[type=password] { width: 100%; padding: 15px 14px; margin-bottom: 13px;
+  border: 1px solid #2a2a2a; border-radius: 0; background: #0d0d0d; font-size: 14px;
+  font-family: inherit; text-align: center; color: #f0e6c8; transition: border .15s; }
+input::placeholder { color: #555; }
+input:focus { outline: none; border-color: {{color_accent}}; }
+.rem { display: flex; align-items: center; gap: 8px; justify-content: center;
+  font-size: 12px; color: #8a8578; margin: 0 0 16px; cursor: pointer; }
+.rem input { accent-color: {{color_accent}}; width: 14px; height: 14px; }
+button.btn { width: 100%; padding: 15px; border: 1px solid {{color_accent}}; border-radius: 0;
+  background: transparent; color: {{color_accent}}; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer; letter-spacing: 2px; transition: all .18s; }
+button.btn:hover { background: {{color_accent}}; color: #111; }
+.error { background: rgba(180,40,40,.15); border: 1px solid rgba(200,60,60,.4);
+  color: #e8a0a0; padding: 11px; font-size: 13px; margin-bottom: 14px; }
+.trial { margin-top: 18px; font-size: 12px; color: #555; }
+.trial a { color: {{color_accent}}; font-weight: 700; text-decoration: none; }
+.foot { margin-top: 24px; font-size: 11px; color: #444; letter-spacing: 1px; }
+.foot a { color: {{color_accent}}; text-decoration: none; }
+</style>
+</head>
+<body>
+$(if chap-id)
+<form name="sendin" action="$(link-login-only)" method="post">
+<input type="hidden" name="username" />
+<input type="hidden" name="password" />
+<input type="hidden" name="dst" value="$(link-orig)" />
+<input type="hidden" name="popup" value="true" />
+</form>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript">
+function doLogin() {
+  document.sendin.username.value = document.login.username.value;
+  document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+  document.sendin.submit();
+  return false;
+}
+</script>
+$(endif)
+
+<div class="card">
+  {{logo}}
+  <h1>{{network_name}}</h1>
+  <div class="line"></div>
+  <div class="sub">{{welcome_msg}}</div>
+  <div class="speed">⚡ {{speed_label}}</div>
+  $(if error)<div class="error">$(error)</div>$(endif)
+  <div class="modes">
+    <button type="button" class="mode on" id="mCard" onclick="setMode('card')">كرت</button>
+    <button type="button" class="mode" id="mUser" onclick="setMode('user')">حساب</button>
+  </div>
+  <form name="login" action="$(link-login-only)" method="post"
+        $(if chap-id) onSubmit="return doLogin()" $(endif)>
+    <input type="hidden" name="dst" value="$(link-orig)" />
+    <input type="hidden" name="popup" value="true" />
+    <input name="username" type="text" value="$(username)" placeholder="رقم الكرت" autocomplete="off" />
+    <input name="password" type="hidden" placeholder="كلمة المرور" autocomplete="current-password" />
+    <label class="rem"><input type="checkbox" id="rem"> تذكر بياناتي</label>
+    <button type="submit" class="btn">د خ و ل</button>
+  </form>
+  $(if trial == 'yes')
+  <div class="trial"><a href="$(link-login-only)?dst=$(link-orig-esc)&amp;username=T-$(mac-esc)">دخول تجريبي مجاني ←</a></div>
+  $(endif)
+  <div class="foot">{{support_line}}</div>
+</div>
+<script type="text/javascript">
+var un = document.login.username, pw = document.login.password;
+function setMode(m) {
+  var card = (m === 'card');
+  document.getElementById('mCard').className = 'mode' + (card ? ' on' : '');
+  document.getElementById('mUser').className = 'mode' + (card ? '' : ' on');
+  pw.type = card ? 'hidden' : 'password';
+  un.placeholder = card ? 'رقم الكرت' : 'اسم المستخدم';
+  un.oninput = card ? function(){ pw.value = un.value; } : null;
+  if (card) pw.value = un.value;
+  un.focus();
+}
+document.login.addEventListener('submit', function(){
+  if (pw.type === 'hidden') pw.value = un.value;
+});
+setMode('card');
+</script>
+<script type="text/javascript">
+(function(){
+  var rem = document.getElementById('rem');
+  try {
+    var s = localStorage.getItem('wifi_card');
+    if (s) { var d = JSON.parse(s); if (d.u) { un.value = d.u; pw.value = d.p || d.u; } if (rem) rem.checked = true; }
+  } catch(e) {}
+  document.login.addEventListener('submit', function(){
+    try {
+      if (rem && rem.checked) localStorage.setItem('wifi_card', JSON.stringify({u: un.value, p: pw.value}));
+      else localStorage.removeItem('wifi_card');
+    } catch(e) {}
+  });
+})();
+</script>
+</body>
+</html>

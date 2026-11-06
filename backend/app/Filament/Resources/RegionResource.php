@@ -55,7 +55,7 @@ class RegionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('المنطقة')->searchable()->sortable(),
-                Tables\Columns\BadgeColumn::make('type')->label('النوع')->formatStateUsing(fn($s) => $s === 'north' ? 'شمال' : 'جنوب')->colors(['primary' => 'north', 'success' => 'south']),
+                Tables\Columns\BadgeColumn::make('type')->label('النوع')->formatStateUsing(fn ($state) => $state === 'north' ? 'شمال' : 'جنوب')->colors(['primary' => 'north', 'success' => 'south']),
                 Tables\Columns\TextColumn::make('currency')->label('العملة'),
                 Tables\Columns\TextColumn::make('directorates_count')->label('المديريات')->counts('directorates'),
                 Tables\Columns\IconColumn::make('is_active')->label('نشطة')->boolean(),

@@ -47,8 +47,8 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('cashback_amount')->label('كاشباك')->money('YER'),
                 Tables\Columns\BadgeColumn::make('status')->label('الحالة')->colors([
                     'success' => 'completed', 'warning' => 'pending', 'danger' => 'failed',
-                ])->formatStateUsing(fn($s) => match($s) {
-                    'completed' => 'مكتملة', 'pending' => 'معلقة', 'failed' => 'فاشلة', default => $s,
+                ])->formatStateUsing(fn ($state) => match($state) {
+                    'completed' => 'مكتملة', 'pending' => 'معلقة', 'failed' => 'فاشلة', default => $state,
                 }),
                 Tables\Columns\TextColumn::make('created_at')->label('التاريخ')->dateTime()->sortable(),
             ])

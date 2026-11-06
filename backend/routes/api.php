@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerNotificationController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerPayoutController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerMikrotikController;
 use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerMikrotikSubscriptionController;
+use App\Http\Controllers\Api\NetworkOwner\NetworkOwnerMikrotikPageController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public routes ────────────────────────────────────────────────
@@ -42,6 +43,12 @@ Route::get('/sub-directorates',                       [RegionController::class, 
 Route::get('/directorates/{id}/sub-directorates',   [RegionController::class, 'subDirectorates']);
 Route::get('/exchange-rate',                        [RegionController::class, 'exchangeRate']);
 Route::get('/charging-points',                      [ChargingPointController::class, 'index']);
+
+// Rendered hotspot login pages — PUBLIC: the router itself downloads
+// these via /tool/fetch (no auth header possible). Folders expire 24h.
+Route::get('/mikrotik-pages/{render}/{file}',
+    [NetworkOwnerMikrotikPageController::class, 'serve'])
+    ->middleware('throttle:120,1');
 
 // ─── Authenticated routes ──────────────────────────────────────────
 // Logout stays reachable for suspended accounts so the app can clean up
@@ -90,6 +97,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/topup/services',                 [TopupController::class, 'services']);
     Route::post('/topup/query',                   [TopupController::class, 'query'])->middleware('throttle:30,1');
     Route::get('/topup/offers',                   [TopupController::class, 'offers'])->middleware('throttle:30,1');
+    Route::get('/topup/quote',                    [TopupController::class, 'quote'])->middleware('throttle:60,1');
     Route::post('/topup/pay',                     [TopupController::class, 'pay'])->middleware('throttle:15,1');
     Route::post('/topup/game',                    [TopupController::class, 'game'])->middleware('throttle:15,1');
     Route::post('/topup/offer/activate',          [TopupController::class, 'activateOffer'])->middleware('throttle:15,1');
@@ -187,5 +195,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/mikrotik/subscribe',        [NetworkOwnerMikrotikSubscriptionController::class, 'subscribe']);
         Route::get('/mikrotik/payments',          [NetworkOwnerMikrotikSubscriptionController::class, 'paymentRequests']);
         Route::post('/mikrotik/payments',         [NetworkOwnerMikrotikSubscriptionController::class, 'storePaymentRequest']);
+
+        // Hotspot login-page template store (Sprint: pages gallery)
+        Route::get('/mikrotik/page-templates',    [NetworkOwnerMikrotikPageController::class, 'index']);
+        Route::post('/mikrotik/page-templates/render', [NetworkOwnerMikrotikPageController::class, 'render']);
     });
 });

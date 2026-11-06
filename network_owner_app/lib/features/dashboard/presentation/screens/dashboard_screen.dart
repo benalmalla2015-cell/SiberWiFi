@@ -500,7 +500,7 @@ class _OwnerManagementActionsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _TopUpAction(
+          child: _ActionTile(
             icon: Icons.router_outlined,
             label: 'أجهزة MikroTik',
             color: AppColors.primary,
@@ -509,7 +509,7 @@ class _OwnerManagementActionsRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _TopUpAction(
+          child: _ActionTile(
             icon: Icons.ev_station,
             label: 'نقاط الشحن',
             color: AppColors.lightBlue,
@@ -518,7 +518,7 @@ class _OwnerManagementActionsRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _TopUpAction(
+          child: _ActionTile(
             icon: Icons.star_outline,
             label: 'تقييمات العملاء',
             color: AppColors.warning,
@@ -529,7 +529,14 @@ class _OwnerManagementActionsRow extends StatelessWidget {
         Expanded(
           child: FeatureGate(
             feature: AccFeatures.module,
-            child: _TopUpAction(
+            lockedChild: _ActionTile(
+              icon: Icons.account_balance_outlined,
+              label: 'المحاسبة',
+              color: AppColors.textGray,
+              locked: true,
+              onTap: () => context.push('/mikrotik/subscription'),
+            ),
+            child: _ActionTile(
               icon: Icons.account_balance_outlined,
               label: 'المحاسبة',
               color: AppColors.accent,
@@ -617,6 +624,75 @@ class _TopUpAction extends StatelessWidget {
   }
 }
 
+/// Vertical icon-over-label tile used by the dashboard action rows.
+/// [locked] renders the dimmed paywalled variant (grey + lock badge)
+/// so a `FeatureGate.lockedChild` fits the same slot instead of the
+/// full-size PremiumLockCard that broke the row layout.
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final bool locked;
+
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.locked = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = locked ? AppColors.textGray : color;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: fg, size: 24),
+                if (locked)
+                  const Positioned(
+                    bottom: -4,
+                    left: -6,
+                    child: Icon(Icons.lock,
+                        size: 12, color: AppColors.textGray),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: locked ? AppColors.textGray : AppColors.textDark,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -632,36 +708,11 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
+      child: _ActionTile(
+        icon: icon,
+        label: label,
+        color: color,
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

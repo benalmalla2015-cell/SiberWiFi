@@ -1,0 +1,29 @@
+# CA private material — generated on the server by init-ca.sh, never committed.
+pki/ca/private/
+pki/ca/*.key
+pki/ca/*.pem
+pki/ca/*.crt
+pki/ca/crl.pem
+pki/ca/index.txt*
+pki/ca/serial*
+pki/ca/crlnumber*
+pki/ca/newcerts/
+pki/clients/
+
+# Certs copied into raddb/ for the container (from pki/ca) — regenerated, not committed.
+raddb/certs/*
+!raddb/certs/.gitkeep
+
+# Runtime logs + engine state.
+logs/
+__pycache__/
+*.pyc
+*.env
+.env
+
+# Generated host .rsc files contain live secrets (registry hosts.json stays tracked).
+host-templates/generated/
+
+# Per-host upstream keys + sealed delivery files — never committed.
+host-templates/secure/
+*.enc

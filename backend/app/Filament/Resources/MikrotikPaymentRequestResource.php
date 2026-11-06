@@ -64,13 +64,13 @@ class MikrotikPaymentRequestResource extends Resource
                 Tables\Columns\TextColumn::make('transfer_receipt_number')->label('رقم السند')->placeholder('—'),
                 Tables\Columns\TextColumn::make('status')->label('الحالة')
                     ->badge()
-                    ->formatStateUsing(fn($s) => match ($s) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'pending' => 'قيد المراجعة',
                         'approved' => 'مقبول',
                         'rejected' => 'مرفوض',
-                        default => $s,
+                        default => $state,
                     })
-                    ->color(fn($s) => match ($s) {
+                    ->color(fn ($state) => match ($state) {
                         'pending' => 'warning',
                         'approved' => 'success',
                         'rejected' => 'danger',
@@ -92,7 +92,7 @@ class MikrotikPaymentRequestResource extends Resource
                     ->label('موافقة')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn($r) => $r->status === 'pending')
+                    ->visible(fn (MikrotikPaymentRequest $record) => $record->status === 'pending')
                     ->requiresConfirmation()
                     ->modalHeading('تفعيل الاشتراك')
                     ->modalDescription('سيتم إنشاء اشتراك نشط بهذه الخطة للمالك')
@@ -115,12 +115,13 @@ class MikrotikPaymentRequestResource extends Resource
                                 'payment_request_id' => $record->id,
                             ]);
                         });
+                        self::notifyOwner($record, true);
                     }),
                 \Filament\Actions\Action::make('reject')
                     ->label('رفض')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
-                    ->visible(fn($r) => $r->status === 'pending')
+                    ->visible(fn (MikrotikPaymentRequest $record) => $record->status === 'pending')
                     ->form([
                         \Filament\Forms\Components\Textarea::make('note')
                             ->label('سبب الرفض')
@@ -133,11 +134,34 @@ class MikrotikPaymentRequestResource extends Resource
                             'reviewed_by' => auth()->id(),
                             'reviewed_at' => now(),
                         ]);
+                        self::notifyOwner($record, false);
                     }),
                 \Filament\Actions\EditAction::make()->label('عرض'),
             ])
             ->defaultSort('created_at', 'desc')
             ->paginated([25, 50]);
+    }
+
+    /** Push the review outcome to the owner — same service the API
+     * uses to alert admins about new payment requests. */
+    private static function notifyOwner(
+        MikrotikPaymentRequest $record, bool $approved): void
+    {
+        try {
+            $plan = $record->plan?->name ?? '';
+            app(\App\Services\NotificationService::class)->send(
+                $record->user,
+                $approved ? 'تم تفعيل اشتراك MikroTik' : 'طلب دفع مرفوض',
+                $approved
+                    ? "تمت الموافقة على دفعتك — اشتراكك في «{$plan}» نشط الآن."
+                    : "رُفض طلب الدفع لخطة «{$plan}». السبب: {$record->admin_note}",
+                ['type' => 'mikrotik_payment_review',
+                 'request_id' => $record->id,
+                 'status' => $approved ? 'approved' : 'rejected']
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('MikroTik review notification failed: ' . $e->getMessage());
+        }
     }
 
     public static function getPages(): array

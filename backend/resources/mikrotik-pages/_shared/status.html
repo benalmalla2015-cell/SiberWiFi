@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="$(refresh-timeout);url=$(link-status)">
+<title>{{network_name}} — حالة الاتصال</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  background: #f0f3f8; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.card {
+  background: #fff; width: 100%; max-width: 400px; border-radius: 18px;
+  overflow: hidden; box-shadow: 0 12px 40px rgba(20,30,60,.14);
+}
+.band {
+  background: {{color_primary}}; padding: 24px; text-align: center; color: #fff;
+}
+.band .logo { max-height: 54px; max-width: 130px; margin-bottom: 8px; }
+.band h1 { font-size: 20px; font-weight: 700; }
+.dot {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.15); border-radius: 999px;
+  font-size: 12px; padding: 4px 14px; margin-top: 8px;
+}
+.dot::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: #4ade80; display: inline-block;
+}
+.body { padding: 22px; }
+.row {
+  display: flex; justify-content: space-between; padding: 11px 4px;
+  border-bottom: 1px solid #eef1f6; font-size: 14px;
+}
+.row:last-child { border-bottom: 0; }
+.row .k { color: #7a8494; }
+.row .v { font-weight: 700; color: #1c2430; direction: ltr; }
+.btn {
+  display: block; text-align: center; margin-top: 18px; padding: 13px;
+  background: {{color_accent}}; color: #fff; border-radius: 10px;
+  font-size: 15px; font-weight: 700; text-decoration: none;
+}
+.foot { text-align: center; padding: 12px; font-size: 12px; color: #889; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="band">
+    {{logo}}
+    <h1>{{network_name}}</h1>
+    <div class="dot">متصل الآن</div>
+  </div>
+  <div class="body">
+    <div class="row"><span class="k">المستخدم</span><span class="v">$(username)</span></div>
+    <div class="row"><span class="k">عنوان IP</span><span class="v">$(ip)</span></div>
+    <div class="row"><span class="k">مدة الاتصال</span><span class="v">$(uptime)</span></div>
+    $(if session-time-left)
+    <div class="row"><span class="k">الوقت المتبقي</span><span class="v">$(session-time-left)</span></div>
+    $(endif)
+    <div class="row"><span class="k">تحميل ↓</span><span class="v">$(bytes-in-nice)</span></div>
+    <div class="row"><span class="k">رفع ↑</span><span class="v">$(bytes-out-nice)</span></div>
+    <a class="btn" href="$(link-logout)">تسجيل الخروج</a>
+  </div>
+  <div class="foot">{{support_line}}</div>
+</div>
+</body>
+</html>

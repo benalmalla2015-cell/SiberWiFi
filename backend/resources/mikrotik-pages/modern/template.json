@@ -1,0 +1,10 @@
+{
+  "id": "modern",
+  "name": "عصري",
+  "description": "خلفية متدرجة وبطاقة زجاجية — مظهر شبكات الجيل الجديد",
+  "defaults": {
+    "color_primary": "#0f4c81",
+    "color_accent": "#e8432d",
+    "welcome_msg": "اتصل بالإنترنت في ثوانٍ"
+  }
+}

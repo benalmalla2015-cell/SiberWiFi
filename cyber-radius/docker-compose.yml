@@ -1,0 +1,68 @@
+# =============================================================================
+# CyberNet RADIUS stack — CYB-01
+#
+#   freeradius  : FreeRADIUS 3.2 (EAP-TLS only) — UDP 1812/1813/3799
+#   engine      : ledger bridge — tails auth/acct detail files and POSTs
+#                 events to the testapp Laravel backend.
+#
+# Bring-up on the VPS:
+#   1) ./init-ca.sh            # one-time: creates pki/ca + raddb/certs
+#   2) cp .env.example .env    # fill CYBER_ENGINE_URL / CYBER_ENGINE_TOKEN
+#   3) docker compose up -d
+# =============================================================================
+name: cyber-radius
+
+services:
+  freeradius:
+    image: freeradius/freeradius-server:3.2.10-alpine
+    container_name: cyber-radius
+    restart: unless-stopped
+    ports:
+      - "1812:1812/udp"   # authentication
+      - "1813:1813/udp"   # accounting
+      - "3799:3799/udp"   # CoA / Disconnect (inbound listener)
+    environment:
+      TZ: ${TZ:-Asia/Aden}
+    volumes:
+      - ./raddb/clients.conf:/etc/raddb/clients.conf:ro
+      - ./raddb/mods-enabled/eap:/etc/raddb/mods-enabled/eap:ro
+      - ./raddb/mods-enabled/detail:/etc/raddb/mods-enabled/detail:ro
+      - ./raddb/mods-enabled/auth_log:/etc/raddb/mods-enabled/auth_log:ro
+      - ./raddb/sites-enabled/default:/etc/raddb/sites-enabled/default:ro
+      - ./raddb/sites-enabled/coa:/etc/raddb/sites-enabled/coa:ro
+      # Populated by init-ca.sh — CA cert, server cert/key, dh, CRL (+ hashes)
+      - ./raddb/certs:/etc/raddb/certs:ro
+      # Shared with the engine container: radacct detail files + auth logs
+      - radius-logs:/var/log/radius
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x radiusd >/dev/null 2>&1 || pgrep -x freeradius >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  engine:
+    image: python:3.12-alpine
+    container_name: cyber-engine
+    restart: unless-stopped
+    depends_on:
+      freeradius:
+        condition: service_started
+    command: ["python", "-u", "/app/engine.py"]
+    environment:
+      TZ: ${TZ:-Asia/Aden}
+      CYBER_ENGINE_URL: ${CYBER_ENGINE_URL:?set CYBER_ENGINE_URL in .env}
+      CYBER_ENGINE_TOKEN: ${CYBER_ENGINE_TOKEN:?set CYBER_ENGINE_TOKEN in .env}
+      ENGINE_LOG_DIR: /logs
+      ENGINE_STATE_DIR: /state
+      ENGINE_POLL_INTERVAL: ${ENGINE_POLL_INTERVAL:-5}
+      ENGINE_BATCH_MAX: ${ENGINE_BATCH_MAX:-200}
+      ENGINE_HTTP_TIMEOUT: ${ENGINE_HTTP_TIMEOUT:-15}
+    volumes:
+      - ./engine/engine.py:/app/engine.py:ro
+      - radius-logs:/logs:ro
+      - engine-state:/state
+
+volumes:
+  radius-logs:
+  engine-state:

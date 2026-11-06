@@ -87,6 +87,7 @@ class RouterOsService {
     String? comment,
     String? limitUptime,
     int? limitBytesTotal,
+    String? rateLimit,
     int? validityDays,
     int? price,
   }) async {
@@ -95,6 +96,9 @@ class RouterOsService {
       params['password'] = password;
     }
     if (profile != null && profile.isNotEmpty) params['profile'] = profile;
+    if (rateLimit != null && rateLimit.isNotEmpty) {
+      params['rate-limit'] = rateLimit;
+    }
     final meta = <String>[
       if (comment != null && comment.isNotEmpty) comment,
       if (validityDays != null && validityDays > 0) 'v:${validityDays}d',
@@ -216,12 +220,72 @@ class RouterOsService {
       _client.talk(['/ppp/active/remove'], {'numbers': id});
 
   // ── User Manager ───────────────────────────────────────────────
+  // RouterOS v7 exposes User Manager at /user-manager; on v6 the same
+  // package lives under /tool/user-manager. The first UM call probes the
+  // v7 path and, on a "no such command" trap, permanently switches this
+  // session to the v6 path so every later call goes direct.
 
-  Future<List<Map<String, String>>> umUsers() =>
-      _client.talk(['/user-manager/user/print']);
+  String _umBase = '/user-manager';
+  bool _umProbed = false;
 
-  Future<List<Map<String, String>>> umProfiles() =>
-      _client.talk(['/user-manager/profile/print']);
+  Future<List<Map<String, String>>> _um(String tail,
+      [Map<String, String>? params]) async {
+    try {
+      final rows = await _client.talk(['$_umBase$tail'], params);
+      _umProbed = true;
+      return rows;
+    } on RouterOSTrapError catch (e) {
+      if (!_umProbed &&
+          _umBase == '/user-manager' &&
+          e.message.contains('no such command')) {
+        _umProbed = true;
+        _umBase = '/tool/user-manager';
+        return _client.talk(['$_umBase$tail'], params);
+      }
+      rethrow;
+    }
+  }
+
+  /// Write ops translate attribute names differently per userman
+  /// generation, so the base path must be resolved before building
+  /// the attribute map.
+  Future<void> _ensureUmProbed() async {
+    if (!_umProbed) await umUsers();
+  }
+
+  /// v6 legacy userman rows expose the login as `username` instead of
+  /// `name` — normalize to `name` so the UI works on both generations.
+  void _normalizeUmRows(List<Map<String, String>> rows) {
+    if (_umBase != '/tool/user-manager') return;
+    for (final r in rows) {
+      if ((r['name'] ?? '').isEmpty && (r['username'] ?? '').isNotEmpty) {
+        r['name'] = r['username']!;
+      }
+    }
+  }
+
+  /// Translates attribute maps for the v6 legacy userman (`name` →
+  /// `username`).
+  Map<String, String> _umAttrs(Map<String, String> attrs) {
+    if (_umBase != '/tool/user-manager') return attrs;
+    final out = Map<String, String>.of(attrs);
+    if (out.containsKey('name')) {
+      out['username'] = out.remove('name')!;
+    }
+    return out;
+  }
+
+  Future<List<Map<String, String>>> umUsers() async {
+    final rows = await _um('/user/print');
+    _normalizeUmRows(rows);
+    return rows;
+  }
+
+  Future<List<Map<String, String>>> umProfiles() async {
+    final rows = await _um('/profile/print');
+    _normalizeUmRows(rows);
+    return rows;
+  }
 
   Future<void> addUmUser({
     required String name,
@@ -230,30 +294,39 @@ class RouterOsService {
     String? comment,
     bool disabled = false,
   }) async {
-    final p = <String, String>{'name': name, 'password': password};
+    await _ensureUmProbed();
+    final p = _umAttrs(<String, String>{'name': name, 'password': password});
+    // Legacy (v6) userman requires every user to belong to a customer.
+    if (_umBase == '/tool/user-manager') p.putIfAbsent('customer', () => 'admin');
     if (sharedUsers != null && sharedUsers.isNotEmpty) {
       p['shared-users'] = sharedUsers;
     }
     if (comment != null && comment.isNotEmpty) p['comment'] = comment;
     if (disabled) p['disabled'] = 'yes';
-    await _client.talk(['/user-manager/user/add'], p);
+    await _um('/user/add', p);
   }
 
-  Future<void> setUmUser(String id, Map<String, String> attrs) =>
-      _client.talk(['/user-manager/user/set'], {'numbers': id, ...attrs});
+  Future<void> setUmUser(String id, Map<String, String> attrs) async {
+    await _ensureUmProbed();
+    await _um('/user/set', {'numbers': id, ..._umAttrs(attrs)});
+  }
 
   Future<void> removeUmUsers(List<String> ids) =>
-      _client.talk(['/user-manager/user/remove'], {'numbers': ids.join(',')});
+      _um('/user/remove', {'numbers': ids.join(',')});
 
   /// User-Manager package/profile (name/price/validity/shared-users...).
-  Future<void> addUmProfile(Map<String, String> attrs) =>
-      _client.talk(['/user-manager/profile/add'], attrs);
+  Future<void> addUmProfile(Map<String, String> attrs) async {
+    await _ensureUmProbed();
+    await _um('/profile/add', _umAttrs(attrs));
+  }
 
-  Future<void> setUmProfile(String id, Map<String, String> attrs) =>
-      _client.talk(['/user-manager/profile/set'], {'numbers': id, ...attrs});
+  Future<void> setUmProfile(String id, Map<String, String> attrs) async {
+    await _ensureUmProbed();
+    await _um('/profile/set', {'numbers': id, ..._umAttrs(attrs)});
+  }
 
   Future<void> removeUmProfile(String id) =>
-      _client.talk(['/user-manager/profile/remove'], {'numbers': id});
+      _um('/profile/remove', {'numbers': id});
 
   // ── Monitoring & diagnostics ───────────────────────────────────
 
@@ -316,6 +389,29 @@ class RouterOsService {
     p['keep-result'] = keepResult ? 'yes' : 'no';
     return _client.talk(['/tool/fetch'], p);
   }
+
+  /// Downloads [url] and stores it on the router filesystem at
+  /// [dstPath] (e.g. `saiber-pages/login.html`). RouterOS creates any
+  /// missing intermediate directories. Used to pull rendered hotspot
+  /// page templates — the pull-model replacement for FTP uploads.
+  Future<List<Map<String, String>>> fetchToFile(
+    String url,
+    String dstPath, {
+    bool checkCertificate = false,
+  }) {
+    return _client.talk([
+      '/tool/fetch'
+    ], {
+      'url': url,
+      'dst-path': dstPath,
+      'check-certificate': checkCertificate ? 'yes' : 'no',
+      if (url.startsWith('https')) 'mode': 'https',
+    });
+  }
+
+  /// Deletes a file entry by id or name (`/file/remove`).
+  Future<void> removeFile(String idOrName) =>
+      _client.talk(['/file/remove'], {'numbers': idOrName});
 
   // ── Netwatch ───────────────────────────────────────────────────
 

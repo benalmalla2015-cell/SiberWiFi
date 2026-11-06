@@ -73,7 +73,8 @@ dependencies:
   google_fonts: ^6.2.1
   file_picker: ^11.0.2
   path_provider: 2.1.5
-  router_os_client: 2.0.1
+  router_os_client:
+    path: packages/router_os_client
   qr_flutter: ^4.1.0
   pdf: ^3.12.0
   printing: ^5.14.3

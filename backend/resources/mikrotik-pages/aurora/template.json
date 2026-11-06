@@ -1,0 +1,11 @@
+{
+  "id": "aurora",
+  "name": "الشفق — Aurora",
+  "description": "أضواء شفق متحركة على خلفية داكنة — تأثير بصري يخطف الأنظار",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#0ea5e9",
+    "color_accent": "#a855f7",
+    "welcome_msg": "أهلاً بك — سجّل الدخول واستمتع بالتصفح"
+  }
+}

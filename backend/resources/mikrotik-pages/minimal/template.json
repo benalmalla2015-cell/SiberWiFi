@@ -1,0 +1,10 @@
+{
+  "id": "minimal",
+  "name": "مينيمال",
+  "description": "بساطة قصوى — حقول نظيفة ومساحات بيضاء بدون أي تشتيت",
+  "defaults": {
+    "color_primary": "#17324f",
+    "color_accent": "#17324f",
+    "welcome_msg": "سجّل دخولك للاتصال بالإنترنت"
+  }
+}

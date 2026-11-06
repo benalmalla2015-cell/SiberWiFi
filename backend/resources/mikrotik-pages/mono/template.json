@@ -1,0 +1,11 @@
+{
+  "id": "mono",
+  "name": "أحادي — Mono",
+  "description": "أبيض وأسود صارم بزوايا حادة وطباعة بارزة — بساطة فاخرة",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#111111",
+    "color_accent": "#111111",
+    "welcome_msg": "سجّل الدخول للاتصال بالإنترنت"
+  }
+}

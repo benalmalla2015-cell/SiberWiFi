@@ -28,15 +28,23 @@ class EntitlementService {
   DateTime? _trialEndsAt;
   Set<String>? _serverAllowed;
 
+  /// True after the first successful server response — lets UI hide
+  /// subscription indicators while the backend is unreachable instead
+  /// of showing a misleading "expired" state.
+  bool _loaded = false;
+
   /// Trial length used for display/banners once the API is live.
   /// Server value wins; this is the agreed default (admin-editable).
   static const defaultTrialDays = 14;
 
   bool get isEnforced => _enforced;
+  bool get serverLoaded => _loaded;
   String get plan => _plan;
   DateTime? get trialEndsAt => _trialEndsAt;
 
   bool get hasPaidAccess => _active || _trialing;
+  bool get isActiveSub => _active;
+  bool get isTrialing => _trialing;
 
   int? get trialDaysLeft {
     final end = _trialEndsAt;
@@ -69,6 +77,7 @@ class EntitlementService {
     _trialing = trialing;
     _active = active;
     _trialEndsAt = trialEndsAt;
+    _loaded = true;
     _serverAllowed = allowedFeatures
         ?.where(MikroFeatures.all.contains)
         .toSet();
@@ -82,5 +91,6 @@ class EntitlementService {
     _active = false;
     _trialEndsAt = null;
     _serverAllowed = null;
+    _loaded = false;
   }
 }

@@ -1,0 +1,11 @@
+{
+  "id": "neo",
+  "name": "ناعم — Neumorphism",
+  "description": "تصميم منحوت بظلال داخلية وخارجية — مظهر مميز وعصري جداً",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#5b7fff",
+    "color_accent": "#a855f7",
+    "welcome_msg": "سجّل دخولك برقم الكرت أو حسابك"
+  }
+}

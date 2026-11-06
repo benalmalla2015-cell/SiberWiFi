@@ -58,12 +58,12 @@ class ReportResource extends Resource
                         'success' => 'resolved',
                         'danger' => 'closed',
                     ])
-                    ->formatStateUsing(fn($s) => match($s) {
+                    ->formatStateUsing(fn ($state) => match($state) {
                         'open' => 'مفتوح',
                         'in_progress' => 'قيد المعالجة',
                         'resolved' => 'تم الحل',
                         'closed' => 'مغلق',
-                        default => $s,
+                        default => $state,
                     }),
                 Tables\Columns\TextColumn::make('created_at')->label('تاريخ البلاغ')->dateTime()->sortable(),
             ])

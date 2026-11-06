@@ -944,10 +944,9 @@ packages:
   router_os_client:
     dependency: "direct main"
     description:
-      name: router_os_client
-      sha256: "51cca1dd9dc373edd4e073793dddc6a993c860f22e4f3a8e2c7a799a691d5815"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/router_os_client"
+      relative: true
+    source: path
     version: "2.0.1"
   rxdart:
     dependency: transitive

@@ -1,0 +1,18 @@
+# -*- text -*-
+# =============================================================================
+# CyberNet — accounting ledger writer (stock layout, paths pinned)
+#
+# One detail file per NAS per day under radacct/. The engine container
+# tails these files and forwards records to the testapp backend.
+# =============================================================================
+
+detail {
+	filename = ${radacctdir}/%{%{Client-IP-Address}:-%{Packet-Src-IP-Address}}/detail-%Y%m%d
+	header = "%t"
+
+	escape_filenames = no
+	permissions = 0600
+
+	locking = yes
+	log_packet_header = no
+}

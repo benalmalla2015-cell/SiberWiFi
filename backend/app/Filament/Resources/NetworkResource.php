@@ -87,9 +87,9 @@ class NetworkResource extends Resource
                     'success' => 'active',
                     'danger'  => 'rejected',
                     'gray'    => 'suspended',
-                ])->formatStateUsing(fn($s) => match($s) {
+                ])->formatStateUsing(fn ($state) => match($state) {
                     'pending' => 'قيد المراجعة', 'active' => 'نشطة',
-                    'rejected' => 'مرفوضة', 'suspended' => 'موقوفة', default => $s,
+                    'rejected' => 'مرفوضة', 'suspended' => 'موقوفة', default => $state,
                 }),
                 Tables\Columns\TextColumn::make('sales_count')->label('المبيعات')->sortable(),
                 Tables\Columns\TextColumn::make('average_rating')->label('التقييم')->suffix('/5'),

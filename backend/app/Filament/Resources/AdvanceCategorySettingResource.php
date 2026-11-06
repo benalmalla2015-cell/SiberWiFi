@@ -38,17 +38,17 @@ class AdvanceCategorySettingResource extends Resource
                 Tables\Columns\TextColumn::make('name')->label('الفئة')->searchable(),
                 Tables\Columns\TextColumn::make('price')->label('سعر الفئة')->money('YER'),
                 Tables\Columns\TextColumn::make('advance_max_cards')->label('الحد الأقصى للكروت'),
-                Tables\Columns\TextColumn::make('advance_max_per_customer')->label('الحد لكل عميل')->formatStateUsing(fn($s) => $s ?? 'بدون حد'),
+                Tables\Columns\TextColumn::make('advance_max_per_customer')->label('الحد لكل عميل')->formatStateUsing(fn ($state) => $state ?? 'بدون حد'),
                 Tables\Columns\TextColumn::make('advance_used_count')->label('المستخدم حالياً'),
                 Tables\Columns\BadgeColumn::make('advance_status')->label('الحالة')->colors([
                     'warning' => 'pending',
                     'success' => 'approved',
                     'danger' => 'rejected',
-                ])->formatStateUsing(fn($s) => match ($s) {
+                ])->formatStateUsing(fn ($state) => match ($state) {
                     'pending' => 'قيد المراجعة',
                     'approved' => 'موافَق عليها',
                     'rejected' => 'مرفوضة',
-                    default => $s,
+                    default => $state,
                 }),
                 Tables\Columns\TextColumn::make('advance_requested_at')->label('تاريخ الطلب')->dateTime('Y-m-d H:i')->sortable(),
             ])

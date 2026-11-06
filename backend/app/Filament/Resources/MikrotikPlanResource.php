@@ -82,7 +82,7 @@ class MikrotikPlanResource extends Resource
                 Tables\Columns\TextColumn::make('duration_days')->label('المدة')->suffix(' يوم')->sortable(),
                 Tables\Columns\TextColumn::make('features')
                     ->label('الميزات')
-                    ->getStateUsing(fn($r) => count($r->features ?? []) . ' ميزة'),
+                    ->getStateUsing(fn ($record) => count($record->features ?? []) . ' ميزة'),
                 Tables\Columns\IconColumn::make('is_active')->label('مفعّلة')->boolean(),
                 Tables\Columns\TextColumn::make('subscriptions_count')
                     ->counts('subscriptions')->label('الاشتراكات'),

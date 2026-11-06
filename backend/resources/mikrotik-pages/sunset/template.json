@@ -1,0 +1,11 @@
+{
+  "id": "sunset",
+  "name": "غروب",
+  "description": "تدرج دافئ من المرجاني إلى الكهرماني — أجواء ودودة",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#ea580c",
+    "color_accent": "#f43f5e",
+    "welcome_msg": "مساؤك سعيد — سجّل دخولك واستمتع"
+  }
+}

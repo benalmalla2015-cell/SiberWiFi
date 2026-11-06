@@ -64,3 +64,13 @@ hs_err_pid*.log
 backend_backup_*/
 tools/__pycache__/
 tools/routeros_cmd_log.txt
+
+# ===== Test/screenshot artifacts =====
+nul
+**/nul
+adb_screens/
+_s*.png
+accounting_plan/*.png
+backend/u170359695_staging
+tools/sim_out.txt
+tools/__pycache__/

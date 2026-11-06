@@ -1,0 +1,11 @@
+{
+  "id": "elite",
+  "name": "نخبة — Elite",
+  "description": "أسود فحمي بخطوط ذهبية رفيعة وتبويب كرت/حساب — أناقة راقية",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#1a1a1a",
+    "color_accent": "#c9a227",
+    "welcome_msg": "اختر طريقة الدخول المناسبة لك"
+  }
+}

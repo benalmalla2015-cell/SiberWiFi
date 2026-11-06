@@ -1,0 +1,31 @@
+{
+  "network": {
+    "wg_net": "10.66.0.0/24",
+    "server_wg_ip": "10.66.0.1",
+    "wg_endpoint": "vpn.cybernet.example",
+    "wg_endpoint_port": 51820,
+    "wg_listen_port": 13231,
+    "server_pubkey": "4D63D8ACpRxPooqhvpCG4Q59nT/0dIWtzuaTuENc+KY=",
+    "ssid": "CyberNet",
+    "lan_base": "10.77.0.0/16",
+    "radius_auth_port": 1812,
+    "radius_acct_port": 1813,
+    "coa_port": 3799
+  },
+  "hosts": {
+    "almalla-001": {
+      "wg_ip": "10.66.0.2",
+      "lan_subnet": "10.77.0.0/24",
+      "wg_pubkey": "MaGvgDwx16dUwe7LLoHH15RNod/aTKE+X3TULc9kHE4=",
+      "radius_secret_hint": "RCx2...1pu7",
+      "created": "2026-11-02 03:45 UTC"
+    },
+    "pstest-001": {
+      "wg_ip": "10.66.0.3",
+      "lan_subnet": "10.77.1.0/24",
+      "wg_pubkey": "e9VoaoBGyHMIfEifGDYkt5y+jvb9VTVJEHbOr4b9f2w=",
+      "radius_secret_hint": "peNh...uTfY",
+      "created": "2026-11-02 03:29 UTC"
+    }
+  }
+}

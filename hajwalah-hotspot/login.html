@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b18">
+<meta name="description" content="بوابة دخول شبكة هجولة — إنترنت بسرعة الانجراف">
+<title>شبكة هجولة | تسجيل الدخول</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<script>
+/* متغيرات MikroTik — تُستبدل تلقائياً عند التقديم من الراوتر */
+var HS = {
+  linkLogin:  '$(link-login-only)',
+  linkOrig:   '$(link-orig)',
+  linkStatus: '$(link-status)',
+  linkLogout: '$(link-logout)',
+  macEsc:     '$(mac-esc)',
+  trial:      '$(trial)'
+/*$(if chap-id)*/
+  ,chapId: '$(chap-id)'
+  ,chapCh: '$(chap-challenge)'
+/*$(endif)*/
+};
+</script>
+</head>
+<body class="page-login">
+<div class="bg-fx" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<!-- نموذج الإرسال المشفر (CHAP) -->
+<form name="sendin" action="$(link-login-only)" method="post" hidden>
+  <input type="hidden" name="username">
+  <input type="hidden" name="password">
+  <input type="hidden" name="plan">
+  <input type="hidden" name="dst" value="$(link-orig)">
+  <input type="hidden" name="popup" value="true">
+</form>
+
+<!-- البانر -->
+<header class="hero">
+  <img src="img/banner.svg" alt="شبكة هجولة — إنترنت بسرعة الانجراف" width="1200" height="420">
+</header>
+
+<div class="brand-row">
+  <img src="img/logo.svg" alt="شعار هجولة" width="54" height="54">
+  <h1 class="brand-name">شبكة هجولة</h1>
+</div>
+<p class="brand-sub">سجّل دخولك وانطلق بأقصى سرعة</p>
+<span id="demoBadge" class="demo-badge">وضع المعاينة — بيانات تجريبية خارج الراوتر</span>
+
+<!-- بطاقة الدخول -->
+<main class="card">
+
+  $(if error)
+  <div class="alert alert-err" role="alert">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/></svg>
+    <span>$(error)</span>
+  </div>
+  $(endif)
+
+  <!-- اختيار السرعة -->
+  <div class="field">
+    <label for="plan">باقة السرعة</label>
+    <div class="input-wrap">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 1 9 9"/><path d="M12 7a5 5 0 0 1 5 5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="m13.5 10.5 4-4"/></svg>
+      <select id="plan" name="plan" class="select-input" aria-describedby="planHint">
+        <option value="4m"  data-desc="تصفح وتواصل — كرت يومي">سهم — 4 Mbps</option>
+        <option value="10m" data-desc="بث ومشاهدة HD — كرت أسبوعي" selected>صاروخ — 10 Mbps</option>
+        <option value="20m" data-desc="ألعاب وبث متزامن — كرت شهري">هجولة برو — 20 Mbps</option>
+      </select>
+    </div>
+    <p class="hint" id="planHint"><span class="dot"></span> <span id="planDesc">بث ومشاهدة HD — كرت أسبوعي</span></p>
+  </div>
+
+  <!-- التبويبات -->
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab active" data-tab="voucher" role="tab" onclick="switchTab('voucher')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h4"/><path d="M16 10h2M16 14h2"/></svg>
+      كرت شحن
+    </button>
+    <button type="button" class="tab" data-tab="account" role="tab" onclick="switchTab('account')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+      حساب مشترك
+    </button>
+  </div>
+
+  <form name="login" action="$(link-login-only)" method="post" autocomplete="off">
+    <input type="hidden" name="dst" value="$(link-orig)">
+    <input type="hidden" name="popup" value="true">
+
+    <!-- تبويب الكرت: دخول تلقائي عند اكتمال الرقم -->
+    <div class="pane active" id="pane-voucher" role="tabpanel">
+      <div class="field">
+        <label for="voucher">رقم الكرت</label>
+        <input type="tel" id="voucher" class="code-input" inputmode="numeric"
+               placeholder="••••••••" maxlength="24" autofocus
+               aria-describedby="voucherHint">
+        <div class="meter" id="voucherMeter"><i></i></div>
+        <p class="hint" id="voucherHint"><span class="dot"></span> أدخل رقم الكرت وسيتم تسجيل دخولك تلقائياً فور اكتماله</p>
+      </div>
+      <div class="auto-note" id="autoNote"><i class="spin"></i><span>جارٍ تسجيل الدخول…</span></div>
+      <button type="button" class="btn" onclick="voucherGo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+        دخول فوري
+      </button>
+    </div>
+
+    <!-- تبويب الحساب -->
+    <div class="pane" id="pane-account" role="tabpanel">
+      <div class="field">
+        <label for="username">اسم المستخدم</label>
+        <div class="input-wrap">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+          <input type="text" id="username" name="username" placeholder="اسم المستخدم" autocomplete="username">
+        </div>
+      </div>
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <div class="input-wrap">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="eye-btn" id="eyeBtn" aria-label="إظهار كلمة المرور">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+        تسجيل الدخول
+      </button>
+    </div>
+  </form>
+
+  $(if trial == 'yes')
+  <button type="button" class="btn btn-ghost" id="trialBtn" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    تجربة مجانية
+  </button>
+  $(endif)
+
+  <p class="secure-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></svg>
+    اتصال مشفر وآمن — بياناتك محمية بتشفير CHAP/HTTPS
+  </p>
+</main>
+
+<footer>
+  <div class="links">
+    <a href="status.html">حالة الاتصال</a>
+    <span class="sep">•</span>
+    <a href="$(link-login-only)">إعادة الدخول</a>
+  </div>
+  <span>شبكة هجولة © جميع الحقوق محفوظة — للدعم الفني اتصل بالوكيل</span>
+</footer>
+
+<script src="md5.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

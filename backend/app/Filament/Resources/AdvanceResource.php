@@ -43,11 +43,11 @@ class AdvanceResource extends Resource
                     'warning' => 'outstanding',
                     'info' => 'partially_repaid',
                     'success' => 'repaid',
-                ])->formatStateUsing(fn($s) => match ($s) {
+                ])->formatStateUsing(fn ($state) => match ($state) {
                     'outstanding' => 'مستحقة بالكامل',
                     'partially_repaid' => 'مسددة جزئياً',
                     'repaid' => 'مسددة بالكامل',
-                    default => $s,
+                    default => $state,
                 }),
                 Tables\Columns\TextColumn::make('created_at')->label('تاريخ السلفة')->dateTime('Y-m-d H:i')->sortable(),
                 Tables\Columns\TextColumn::make('repaid_at')->label('تاريخ السداد')->dateTime('Y-m-d H:i'),

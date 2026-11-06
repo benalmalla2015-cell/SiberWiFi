@@ -1,0 +1,11 @@
+{
+  "id": "glass",
+  "name": "زجاجي",
+  "description": "بطاقة زجاجية شفافة فوق خلفية متدرجة نابضة — طابع فاخر",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#7c3aed",
+    "color_accent": "#ec4899",
+    "welcome_msg": "مرحباً بك — أدخل بياناتك للاتصال"
+  }
+}

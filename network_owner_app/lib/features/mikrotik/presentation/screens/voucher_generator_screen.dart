@@ -34,6 +34,7 @@ class _VoucherGeneratorScreenState
   String _dataUnit = 'G'; // G or M → limit-bytes-total
   String _uptimeUnit = 'h'; // h or m
   String? _profile;
+  String? _rateLimit; // user rate-limit (overrides profile speed)
   int? _networkId;
   int? _categoryId;
   bool _sameAsCode = true;
@@ -84,11 +85,20 @@ class _VoucherGeneratorScreenState
     super.dispose();
   }
 
+  /// Max vouchers per batch. Large runs are chunked, not serialized
+  /// one-by-one, so even 5000 stays usable (see _generate).
+  static const _maxCount = 5000;
+
+  /// Concurrent /ip/hotspot/user/add calls in flight — the API client
+  /// tags each command, so parallel adds over one socket are safe.
+  static const _parallel = 8;
+
   Future<void> _generate() async {
     final count = int.tryParse(_countCtrl.text.trim()) ?? 0;
     final length = int.tryParse(_lengthCtrl.text.trim()) ?? 8;
-    if (count < 1 || count > 500) {
-      setState(() => _error = 'العدد يجب أن يكون بين 1 و 500');
+    if (count < 1 || count > _maxCount) {
+      setState(
+          () => _error = 'العدد يجب أن يكون بين 1 و $_maxCount');
       return;
     }
     setState(() {
@@ -100,24 +110,38 @@ class _VoucherGeneratorScreenState
     });
 
     final batch = 'saiberwifi-${DateTime.now().millisecondsSinceEpoch}';
+    final validity = int.tryParse(_validityCtrl.text.trim());
+    final price = int.tryParse(_priceCtrl.text.trim());
+    final dataLimit = _dataLimitBytes;
+    final uptime = _limitUptime;
+    final password = _sameAsCode;
+    final profile = _profile;
+    final rateLimit = _rateLimit;
     RouterOsService? svc;
     try {
       svc = await RouterOsService.connect(widget.router);
       final codes = <String>[];
-      for (var i = 0; i < count; i++) {
-        final code = VoucherGenerator.code(length: length.clamp(4, 32));
-        await svc.addHotspotUser(
-          name: code,
-          password: _sameAsCode ? code : null,
-          profile: _profile,
-          comment: batch,
-          limitUptime: _limitUptime,
-          limitBytesTotal: _dataLimitBytes,
-          validityDays: int.tryParse(_validityCtrl.text.trim()),
-          price: int.tryParse(_priceCtrl.text.trim()),
+      var i = 0;
+      while (i < count) {
+        final chunkSize = (count - i).clamp(0, _parallel);
+        final chunk = List.generate(
+          chunkSize,
+          (_) => VoucherGenerator.code(length: length.clamp(4, 32)),
         );
-        codes.add(code);
-        if (mounted) setState(() => _done = i + 1);
+        await Future.wait(chunk.map((code) => svc!.addHotspotUser(
+              name: code,
+              password: password ? code : null,
+              profile: profile,
+              comment: batch,
+              limitUptime: uptime,
+              limitBytesTotal: dataLimit,
+              rateLimit: rateLimit,
+              validityDays: validity,
+              price: price,
+            )));
+        codes.addAll(chunk);
+        i += chunkSize;
+        if (mounted) setState(() => _done = i);
       }
       setState(() => _generated = codes);
       ref.invalidate(routerSessionProvider(widget.router));
@@ -362,6 +386,35 @@ class _VoucherGeneratorScreenState
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: _rateLimit,
+                  decoration: const InputDecoration(
+                    labelText: 'سرعة الكرت',
+                    prefixIcon: Icon(Icons.speed),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: null, child: Text('حسب الباقة')),
+                    DropdownMenuItem(
+                        value: '512k/512k', child: Text('512 كيلوبت')),
+                    DropdownMenuItem(
+                        value: '1M/1M', child: Text('1 ميجا')),
+                    DropdownMenuItem(
+                        value: '2M/2M', child: Text('2 ميجا')),
+                    DropdownMenuItem(
+                        value: '4M/4M', child: Text('4 ميجا')),
+                    DropdownMenuItem(
+                        value: '8M/8M', child: Text('8 ميجا')),
+                    DropdownMenuItem(
+                        value: '10M/10M', child: Text('10 ميجا')),
+                    DropdownMenuItem(
+                        value: '20M/20M', child: Text('20 ميجا')),
+                    DropdownMenuItem(
+                        value: '50M/50M', child: Text('50 ميجا')),
+                  ],
+                  onChanged: (v) => setState(() => _rateLimit = v),
                 ),
               ],
             ),

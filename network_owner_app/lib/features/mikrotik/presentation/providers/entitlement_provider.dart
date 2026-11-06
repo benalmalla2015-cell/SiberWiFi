@@ -69,3 +69,10 @@ final hasPaidAccessProvider = Provider<bool>((ref) {
   ref.watch(entitlementProvider);
   return EntitlementService.instance.hasPaidAccess;
 });
+
+/// True once the server has answered the entitlements call — keeps
+/// subscription UI hidden (not "expired") while the API is down.
+final entitlementLoadedProvider = Provider<bool>((ref) {
+  ref.watch(entitlementProvider);
+  return EntitlementService.instance.serverLoaded;
+});

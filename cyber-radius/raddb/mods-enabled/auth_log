@@ -1,0 +1,19 @@
+# -*- text -*-
+# =============================================================================
+# CyberNet — auth ledger writer (detail instance named `cyberauth`)
+#
+# Invoked from sites-enabled/default post-auth + Post-Auth-Type REJECT.
+# Writes one record per Access-Accept / Access-Reject so the engine can
+# forward auth events to the backend with full request context.
+# =============================================================================
+
+detail cyberauth {
+	filename = ${radacctdir}/%{%{Client-IP-Address}:-%{Packet-Src-IP-Address}}/cyberauth-detail-%Y%m%d
+	header = "%t"
+
+	escape_filenames = no
+	permissions = 0600
+
+	locking = yes
+	log_packet_header = no
+}

@@ -17,10 +17,9 @@ return new class extends Migration
             $table->foreignId('network_owner_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
-            $table->foreignId('agent_id')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            // FK → acc_agents added by 020004 — acc_agents (020001)
+            // does not exist yet when this table is created.
+            $table->unsignedBigInteger('agent_id')->nullable()->index();
             $table->string('action', 60);
             $table->string('entity', 60);
             $table->unsignedBigInteger('entity_id')->nullable();

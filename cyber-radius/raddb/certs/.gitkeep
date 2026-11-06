@@ -1,0 +1,2 @@
+# raddb/certs — populated by init-ca.sh (server.key, server.crt, ca.crt, dh, crl hashes).
+# Directory must exist before `docker compose up`; contents are gitignored.

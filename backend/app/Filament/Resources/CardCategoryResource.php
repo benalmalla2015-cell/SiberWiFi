@@ -50,7 +50,7 @@ class CardCategoryResource extends Resource
                 Tables\Columns\TextColumn::make('network.name')->label('الشبكة')->searchable(),
                 Tables\Columns\TextColumn::make('name')->label('الفئة')->searchable(),
                 Tables\Columns\TextColumn::make('speed')->label('السرعة'),
-                Tables\Columns\TextColumn::make('duration')->label('المدة')->formatStateUsing(fn($s, $r) => $s ? "$s {$r->duration_unit}" : '-'),
+                Tables\Columns\TextColumn::make('duration')->label('المدة')->formatStateUsing(fn ($state, $record) => $state ? "$state {$record->duration_unit}" : '-'),
                 Tables\Columns\TextColumn::make('price')->label('السعر')->money('YER')->sortable(),
                 Tables\Columns\TextColumn::make('value')->label('القيمة')->money('YER'),
                 Tables\Columns\IconColumn::make('is_active')->label('نشطة')->boolean(),

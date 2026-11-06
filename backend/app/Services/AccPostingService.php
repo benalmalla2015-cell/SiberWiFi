@@ -351,7 +351,12 @@ class AccPostingService
             if (! Schema::hasTable('acc_sync_queue')) {
                 return;
             }
+            $ownerId = (int) ($payload['network_owner_id'] ?? 0);
+            if ($ownerId <= 0) {
+                return;
+            }
             DB::table('acc_sync_queue')->insert([
+                'network_owner_id' => $ownerId,
                 'op_type' => 'post:' . $docType,
                 'payload' => json_encode(
                     ['doc' => $payload, 'error' => $e->getMessage()],

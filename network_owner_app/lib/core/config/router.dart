@@ -31,12 +31,14 @@ import '../../features/mikrotik/presentation/screens/user_manager_screen.dart';
 import '../../features/mikrotik/presentation/screens/router_dashboard_screen.dart';
 import '../../features/mikrotik/presentation/screens/router_setup_screen.dart';
 import '../../features/mikrotik/presentation/screens/routers_screen.dart';
+import '../../features/mikrotik/presentation/screens/hotspot_pages_screen.dart';
 import '../../features/mikrotik/presentation/screens/voucher_generator_screen.dart';
 import '../../features/mikrotik/presentation/screens/subscription_screen.dart';
 import '../../features/mikrotik/presentation/screens/remote_access_screen.dart';
 import '../../features/mikrotik/data/feature_keys.dart';
 import '../../features/mikrotik/presentation/widgets/feature_gate.dart';
 import '../../features/accounting/presentation/screens/acc_home_screen.dart';
+import '../../features/accounting/providers/acc_providers.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/splash_screen.dart';
 import '../widgets/welcome_screen.dart';
@@ -98,6 +100,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isPendingOwner && !isPending) return '/pending';
         // Approved owner should not see pending screen
         if (!isPendingOwner && isPending) return '/';
+        // Accounting operating accounts (acc_agents) live entirely on
+        // the accounting surface — the owner dashboard/networks tabs
+        // are owner-namespaced endpoints that would 403 for them.
+        // The resolved acc session is the authoritative signal; the
+        // user-model check covers the window before it loads.
+        final accSession = ref.read(accSessionProvider).valueOrNull;
+        final isAccAgent = (user?.isAccAgent ?? false) ||
+            (accSession != null && !accSession.isOwner);
+        if (isAccAgent) {
+          const agentLocations = [
+            '/accounting',
+            '/profile',
+            '/about-us',
+            '/terms-of-service',
+            '/privacy-policy',
+          ];
+          final allowed = agentLocations.any(
+            (p) => loc == p || loc.startsWith('$p/'),
+          );
+          if (!allowed) return '/accounting';
+          return null;
+        }
         // Authenticated but on login/register â†’ go home
         if (isLogin || isRegister) return '/';
         return null;
@@ -242,6 +266,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/mikrotik/card-templates',
             builder: (context, state) =>
                 _mikrotikScreen(state, (r) => CardTemplatesScreen(router: r)),
+          ),
+          GoRoute(
+            path: '/mikrotik/hotspot-pages',
+            builder: (context, state) =>
+                _mikrotikScreen(state, (r) => HotspotPagesScreen(router: r)),
           ),
           GoRoute(
             path: '/mikrotik/monitoring',

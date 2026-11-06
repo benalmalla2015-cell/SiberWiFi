@@ -1,0 +1,11 @@
+{
+  "id": "ocean",
+  "name": "محيط — Ocean",
+  "description": "أعماق زرقاء بأمواج متحركة أسفل البطاقة — انتعاش بصري",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#0c4a6e",
+    "color_accent": "#0ea5e9",
+    "welcome_msg": "أهلاً بك — انغمس في تجربة الإنترنت"
+  }
+}

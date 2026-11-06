@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b18">
+<title>شبكة هجولة</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<meta http-equiv="refresh" content="$(advert-interval);url=$(link-redirect)">
+<meta http-equiv="pragma" content="no-cache">
+</head>
+<body>
+<div class="bg-fx" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<div class="brand-row" style="margin-top:40px">
+  <img src="img/logo.svg" alt="شعار هجولة" width="54" height="54">
+  <h1 class="brand-name">شبكة هجولة</h1>
+</div>
+
+<main class="card center" style="margin-top:22px">
+  <h1 class="page-title">إعلان</h1>
+  <p class="lead">سيتم إعادة توجيهك خلال <span class="count" id="cd">10</span> ثوانٍ…</p>
+  <a class="btn" href="$(link-redirect)">متابعة للإنترنت</a>
+</main>
+
+<footer><span>شبكة هجولة © جميع الحقوق محفوظة</span></footer>
+
+<script src="js/demo.js"></script>
+<script>
+(function () {
+  var n = 10, el = document.getElementById('cd');
+  var t = setInterval(function () {
+    if (--n <= 0) { clearInterval(t); location.href = document.querySelector('.btn').href; }
+    else el.textContent = n;
+  }, 1000);
+})();
+</script>
+</body>
+</html>

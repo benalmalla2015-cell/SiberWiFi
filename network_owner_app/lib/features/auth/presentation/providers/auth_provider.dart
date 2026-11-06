@@ -45,6 +45,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState(status: AuthStatus.authenticated, user: cached);
         _refreshUser();
         _syncFcmToken();
+      } else if (cached != null && await _repo.hasAccountingSession()) {
+        // Accounting operating account (admin/distributor/pos).
+        state = AuthState(status: AuthStatus.authenticated, user: cached);
+        _refreshUser();
+        _syncFcmToken();
       } else if (cached != null) {
         await _repo.logout();
         state = const AuthState(status: AuthStatus.unauthenticated, error: 'هذا الحساب ليس حساب صاحب شبكة');
@@ -70,7 +75,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final user = await _repo.login(phone, password);
-      if (!user.isNetworkOwner && user.role != 'network_owner') {
+      if (!user.isNetworkOwner &&
+          user.role != 'network_owner' &&
+          !await _repo.hasAccountingSession()) {
         await _repo.logout();
         state = state.copyWith(
           isLoading: false,

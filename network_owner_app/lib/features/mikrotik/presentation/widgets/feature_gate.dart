@@ -28,6 +28,7 @@ class FeatureGate extends ConsumerWidget {
     required this.child,
     this.lockedTitle,
     this.lockedMessage,
+    this.lockedChild,
   });
 
   /// One of [MikroFeatures] keys.
@@ -38,10 +39,15 @@ class FeatureGate extends ConsumerWidget {
   final String? lockedTitle;
   final String? lockedMessage;
 
+  /// Optional compact widget shown instead of [PremiumLockCard] when the
+  /// gate sits inside a constrained slot (e.g. a dashboard action tile).
+  final Widget? lockedChild;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allowed = ref.watch(featureAllowedProvider(feature));
     if (allowed) return child;
+    if (lockedChild != null) return lockedChild!;
     return PremiumLockCard(
       title: lockedTitle,
       message: lockedMessage,

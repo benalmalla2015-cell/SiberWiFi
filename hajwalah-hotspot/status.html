@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b18">
+<meta http-equiv="refresh" content="300">
+<title>شبكة هجولة | حالة الاتصال</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="bg-fx" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<div class="brand-row" style="margin-top:24px">
+  <img src="img/logo.svg" alt="شعار هجولة" width="54" height="54">
+  <h1 class="brand-name">شبكة هجولة</h1>
+</div>
+<p class="brand-sub">حالة جلستك الحالية</p>
+
+<main class="card center">
+  <span class="status-pill"><i class="pulse"></i> متصل الآن</span>
+
+  <div class="stat-grid" style="text-align:start">
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg> المستخدم</span>
+      <div class="v ar" id="stUser">$(username)</div>
+    </div>
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> مدة الاتصال</span>
+      <div class="v" id="stUptime">$(uptime)</div>
+    </div>
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 21h16"/></svg> تحميل</span>
+      <div class="v" id="stDown">$(bytes-in-nice)</div>
+    </div>
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0 4 4m-4-4-4 4"/><path d="M4 3h16"/></svg> رفع</span>
+      <div class="v" id="stUp">$(bytes-out-nice)</div>
+    </div>
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> الوقت المتبقي</span>
+      <div class="v" id="stLeft">$(session-time-left)</div>
+    </div>
+    <div class="stat">
+      <span class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg> عنوان IP</span>
+      <div class="v" id="stIp">$(ip)</div>
+    </div>
+  </div>
+
+  <form action="$(link-logout)" method="post" name="logout">
+    <button type="submit" class="btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      تسجيل الخروج
+    </button>
+  </form>
+</main>
+
+<footer>
+  <div class="links"><a href="login.html">صفحة الدخول</a></div>
+  <span>شبكة هجولة © جميع الحقوق محفوظة</span>
+</footer>
+
+<script src="js/demo.js"></script>
+<script>
+/* قيم تجريبية عند المعاينة خارج الراوتر */
+(function () {
+  var demo = {
+    stUser: 'GUEST-1024', stUptime: '01:24:36', stDown: '182.4 MiB',
+    stUp: '36.9 MiB', stLeft: '04:35:24', stIp: '10.5.50.23'
+  };
+  Object.keys(demo).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.textContent.indexOf('$(') !== -1) el.textContent = demo[id];
+    if (el && el.textContent.trim() === '' ) el.textContent = demo[id];
+  });
+})();
+</script>
+</body>
+</html>

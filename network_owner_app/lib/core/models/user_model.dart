@@ -75,4 +75,11 @@ class UserModel extends HiveObject {
       };
 
   bool get isPendingNetworkOwner => isNetworkOwner && !networkOwnerApproved;
+
+  /// Accounting operating account (admin/distributor/pos) — admitted
+  /// to this app via an active acc_agents row rather than an owner
+  /// profile, and routed to /accounting instead of the owner home
+  /// (PLAN §1). The login gate guarantees any authenticated
+  /// non-owner is a valid acc agent.
+  bool get isAccAgent => !isNetworkOwner && role != 'network_owner';
 }

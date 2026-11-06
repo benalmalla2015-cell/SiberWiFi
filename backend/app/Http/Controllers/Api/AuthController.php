@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccAgent;
 use App\Models\FcmToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -116,7 +117,11 @@ class AuthController extends Controller
         if ($request->header('X-App-Type') === 'network_owner_app'
             && $user->type !== 'network_owner'
             && !$user->networks()->exists()
-            && !$user->networkOwnerProfile()->exists()) {
+            && !$user->networkOwnerProfile()->exists()
+            // Accounting agents (admin/distributor/pos) share this app —
+            // an active acc_agents row is their login credential.
+            && !AccAgent::where('user_id', $user->id)
+                ->where('status', AccAgent::STATUS_ACTIVE)->exists()) {
             return response()->json(['success' => false, 'message' => 'هذا الحساب ليس حساب صاحب شبكة'], 403);
         }
 

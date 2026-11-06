@@ -22,10 +22,9 @@ return new class extends Migration
             $table->string('entry_no', 32);
             $table->string('doc_type', 40);
             $table->unsignedBigInteger('doc_ref_id')->nullable();
-            $table->foreignId('agent_id')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            // FK → acc_agents added by 020004 — acc_agents (020001)
+            // does not exist yet when this table is created.
+            $table->unsignedBigInteger('agent_id')->nullable()->index();
             $table->date('date');
             $table->string('currency', 10)->default('YER');
             $table->decimal('exchange_rate', 18, 6)->default(1);

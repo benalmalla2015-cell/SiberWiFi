@@ -1,0 +1,11 @@
+{
+  "id": "orbit",
+  "name": "فضائي — Orbit",
+  "description": "سماء مرصّعة بالنجوم ومدار دوّار — تجربة كونية فريدة",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#312e81",
+    "color_accent": "#818cf8",
+    "welcome_msg": "انطلق في رحلة تصفحك"
+  }
+}

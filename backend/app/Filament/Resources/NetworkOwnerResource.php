@@ -79,9 +79,9 @@ class NetworkOwnerResource extends Resource
                 Tables\Columns\TextColumn::make('user.available_balance')->label('الرصيد المتاح')->money('YER')->sortable(),
                 Tables\Columns\TextColumn::make('user.total_earnings')->label('إجمالي الأرباح')->money('YER')->sortable(),
                 Tables\Columns\TextColumn::make('is_approved')->label('الحالة')
-                    ->formatStateUsing(fn($s) => $s ? 'تمت الموافقة' : 'قيد المراجعة')
+                    ->formatStateUsing(fn ($state) => $state ? 'تمت الموافقة' : 'قيد المراجعة')
                     ->badge()
-                    ->color(fn($s) => $s ? 'success' : 'warning'),
+                    ->color(fn ($state) => $state ? 'success' : 'warning'),
                 Tables\Columns\TextColumn::make('created_at')->label('تاريخ التسجيل')->date()->sortable(),
             ])
             ->filters([
@@ -104,7 +104,7 @@ class NetworkOwnerResource extends Resource
                     ->label('موافقة')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->hidden(fn($r) => (bool)($r?->is_approved))
+                    ->hidden(fn ($record) => (bool) $record->is_approved)
                     ->requiresConfirmation()
                     ->successRedirectUrl(static::getUrl('index'))
                     ->action(function ($record) {

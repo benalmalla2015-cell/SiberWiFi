@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{network_name}} — تسجيل الدخول</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: #0b1220; overflow-x: hidden; }
+.glow { position: fixed; border-radius: 50%; filter: blur(90px); opacity: .45;
+  pointer-events: none; animation: drift 14s ease-in-out infinite alternate; }
+.g1 { width: 380px; height: 380px; background: {{color_primary}}; top: -120px; right: -100px; }
+.g2 { width: 340px; height: 340px; background: {{color_accent}}; bottom: -110px; left: -90px;
+  animation-delay: -6s; }
+.g3 { width: 200px; height: 200px; background: #22d3ee; top: 55%; right: 12%; opacity: .3;
+  animation-delay: -3s; }
+@keyframes drift { from { transform: translate(0,0) scale(1); }
+  to { transform: translate(-40px,50px) scale(1.15); } }
+.card { width: 100%; max-width: 390px; padding: 38px 28px 26px; text-align: center;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 26px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  position: relative; animation: up .5s ease both; }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; } }
+.logo { max-height: 62px; max-width: 140px; margin-bottom: 8px; }
+h1 { font-size: 25px; color: #f1f5f9; font-weight: 800; }
+.sub { color: #94a3b8; font-size: 13px; margin: 8px 0 20px; line-height: 1.7; }
+.speed { display: inline-block; color: #7dd3fc; font-size: 12px; font-weight: 700;
+  border: 1px solid rgba(125,211,252,.35); border-radius: 999px; padding: 4px 14px;
+  margin-bottom: 14px; background: rgba(125,211,252,.08); }
+.speed:empty { display: none; }
+input[type=text], input[type=password] { width: 100%; padding: 15px 16px; margin-bottom: 13px;
+  border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
+  background: rgba(255,255,255,.07); font-size: 15px; font-family: inherit;
+  text-align: center; color: #f1f5f9; transition: border .15s, background .15s; }
+input::placeholder { color: #64748b; }
+input:focus { outline: none; border-color: {{color_primary}};
+  background: rgba(255,255,255,.1); box-shadow: 0 0 0 3px rgba(14,165,233,.15); }
+button { width: 100%; padding: 15px; border: 0; border-radius: 14px;
+  background: linear-gradient(135deg, {{color_primary}}, {{color_accent}});
+  color: #fff; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(14,165,233,.35); transition: transform .12s; }
+button:hover { transform: translateY(-1px); }
+.error { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.4);
+  color: #fca5a5; border-radius: 12px; padding: 11px; font-size: 13px; margin-bottom: 14px; }
+.trial { margin-top: 17px; font-size: 13px; color: #64748b; }
+.trial a { color: #7dd3fc; font-weight: 800; text-decoration: none; }
+.foot { margin-top: 22px; font-size: 12px; color: #475569; }
+.foot a { color: #7dd3fc; font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+$(if chap-id)
+<form name="sendin" action="$(link-login-only)" method="post">
+<input type="hidden" name="username" />
+<input type="hidden" name="password" />
+<input type="hidden" name="dst" value="$(link-orig)" />
+<input type="hidden" name="popup" value="true" />
+</form>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript">
+function doLogin() {
+  document.sendin.username.value = document.login.username.value;
+  document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+  document.sendin.submit();
+  return false;
+}
+</script>
+$(endif)
+
+<div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+<div class="card">
+  {{logo}}
+  <h1>{{network_name}}</h1>
+  <div class="sub">{{welcome_msg}}</div>
+  <div class="speed">⚡ {{speed_label}}</div>
+  $(if error)<div class="error">$(error)</div>$(endif)
+  <form name="login" action="$(link-login-only)" method="post"
+        $(if chap-id) onSubmit="return doLogin()" $(endif)>
+    <input type="hidden" name="dst" value="$(link-orig)" />
+    <input type="hidden" name="popup" value="true" />
+    <input name="username" type="text" value="$(username)" placeholder="اسم المستخدم / رقم الكرت" autocomplete="username" />
+    <input name="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+    <button type="submit">دخول</button>
+  </form>
+  $(if trial == 'yes')
+  <div class="trial"><a href="$(link-login-only)?dst=$(link-orig-esc)&amp;username=T-$(mac-esc)">دخول تجريبي مجاني ←</a></div>
+  $(endif)
+  <div class="foot">{{support_line}}</div>
+</div>
+</body>
+</html>

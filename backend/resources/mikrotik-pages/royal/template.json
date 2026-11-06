@@ -1,0 +1,11 @@
+{
+  "id": "royal",
+  "name": "ملكي — Royal",
+  "description": "بنفسجي ملكي مع إطار ذهبي — فخامة يليق بها عملاؤك",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#4c1d95",
+    "color_accent": "#d4af37",
+    "welcome_msg": "أهلاً بضيوفنا الكرام — سجّل الدخول"
+  }
+}

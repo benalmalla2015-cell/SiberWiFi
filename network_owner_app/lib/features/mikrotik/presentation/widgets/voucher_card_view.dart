@@ -31,106 +31,123 @@ class VoucherCardView extends StatelessWidget {
   Widget _manualCard() {
     final c1 = Color(template.color1);
     final c2 = Color(template.color2);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [c1, c2],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.wifi, color: Colors.white70, size: 16),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  template.networkName.isEmpty
-                      ? 'اسم الشبكة'
-                      : template.networkName,
-                  style: const TextStyle(
-                    fontFamily: 'Cairo',
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+    // The content is laid out at a fixed logical size inside a
+    // FittedBox, so narrow grid cells scale it down instead of
+    // overflowing (was the pixel-overflow error on print preview).
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [c1, c2],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
           ),
-          const SizedBox(height: 8),
-          Text(
-            code.isEmpty ? 'USER-PASS' : code,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              color: Colors.white,
-              fontSize: template.fontSize,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SizedBox(
+            width: 300,
+            height: 196,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.wifi,
+                          color: Colors.white70, size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          template.networkName.isEmpty
+                              ? 'اسم الشبكة'
+                              : template.networkName,
+                          style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    code.isEmpty ? 'USER-PASS' : code,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      color: Colors.white,
+                      fontSize: template.fontSize,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (template.packageLabel.isNotEmpty)
+                              Text(
+                                template.packageLabel,
+                                style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (template.price > 0)
+                              Text(
+                                '${template.price} ريال',
+                                style: const TextStyle(
+                                  fontFamily: 'Cairo',
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            if (template.contact.isNotEmpty)
+                              Text(
+                                template.contact,
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  color: Colors.white
+                                      .withValues(alpha: 0.8),
+                                  fontSize: 10,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: QrImageView(
+                          data: template.qrPayload(
+                              code.isEmpty ? 'USER-PASS' : code),
+                          size: qrSize,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (template.packageLabel.isNotEmpty)
-                      Text(
-                        template.packageLabel,
-                        style: const TextStyle(
-                          fontFamily: 'Cairo',
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    if (template.price > 0)
-                      Text(
-                        '${template.price} ريال',
-                        style: const TextStyle(
-                          fontFamily: 'Cairo',
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    if (template.contact.isNotEmpty)
-                      Text(
-                        template.contact,
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 9,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: QrImageView(
-                  data: template.qrPayload(code.isEmpty ? 'USER-PASS' : code),
-                  size: qrSize,
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

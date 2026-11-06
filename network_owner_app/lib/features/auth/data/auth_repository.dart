@@ -60,6 +60,20 @@ class AuthRepository {
     }
   }
 
+  /// Whether the signed-in account resolves an accounting agent role
+  /// via acc_agents (admin | distributor | pos). Operating accounts
+  /// are regular app users — the acc session, not users.type, admits
+  /// them into this app (PLAN §1).
+  Future<bool> hasAccountingSession() async {
+    try {
+      final res = await _api.get('/network-owner/accounting/me');
+      final j = res.data is Map ? res.data as Map<String, dynamic> : null;
+      return j?['success'] == true && j?['data']?['role'] != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<UserModel> registerNetworkOwner(dynamic data) async {
     try {
       final deviceId = await DeviceIdentityService.getId();

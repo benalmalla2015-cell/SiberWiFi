@@ -125,9 +125,15 @@ class NetworkOwnerMikrotikSubscriptionController extends Controller
             $sub->refresh();
         }
 
-        $features = $running
-            ? self::FEATURE_KEYS
-            : $this->freeFeatures();
+        // Per-account overrides: grant opens keys beyond plan/free,
+        // revoke withholds keys even on a running subscription.
+        $granted = array_intersect(
+            $sub->granted_features ?? [], self::FEATURE_KEYS);
+        $revoked = array_intersect(
+            $sub->revoked_features ?? [], self::FEATURE_KEYS);
+        $base = $running ? self::FEATURE_KEYS : $this->freeFeatures();
+        $features = array_values(array_diff(
+            array_unique(array_merge($base, $granted)), $revoked));
 
         return response()->json([
             'success' => true,
@@ -308,7 +314,7 @@ class NetworkOwnerMikrotikSubscriptionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم إرسال طلب الدفع — سيُفعّل الاشتراك بعد مراجعة الإيصال',
-            'data' => ['id' => $req->id, 'status' => $req->status],
+            'data' => ['id' => $req->id, 'status' => $req->fresh()->status],
         ], 201);
     }
 }

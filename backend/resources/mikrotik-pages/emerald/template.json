@@ -1,0 +1,11 @@
+{
+  "id": "emerald",
+  "name": "زمردي",
+  "description": "أخضر طبيعي منعش مع لمسات ناعمة — يوحي بالهدوء والثقة",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#047857",
+    "color_accent": "#10b981",
+    "welcome_msg": "أهلاً بك في شبكتنا — سجّل دخولك للمتابعة"
+  }
+}

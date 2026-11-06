@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->alias([
             'active' => \App\Http\Middleware\EnsureAccountActive::class,
+            'cyber.hmac' => \App\Http\Middleware\CyberHmacMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

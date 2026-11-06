@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/accounting/providers/acc_providers.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../theme/app_theme.dart';
 
@@ -10,6 +12,16 @@ class MainScaffold extends ConsumerWidget {
   final String location;
 
   const MainScaffold({super.key, required this.child, required this.location});
+
+  /// Whether the signed-in account operates an acc_agents role
+  /// (admin/distributor/pos). True when the user model flags a
+  /// non-owner account, or the resolved acc session already
+  /// returned a non-owner role.
+  bool _isAccAgent(WidgetRef ref) {
+    if (ref.watch(authProvider).user?.isAccAgent ?? false) return true;
+    final session = ref.watch(accSessionProvider).valueOrNull;
+    return session != null && !session.isOwner;
+  }
 
   int get _currentIndex {
     if (location == '/') return 0;
@@ -38,7 +50,13 @@ class MainScaffold extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: child,
-        bottomNavigationBar: Container(
+        // acc_agents live on the accounting surface only — the owner
+        // tabs point at owner-namespaced endpoints (PLAN §1). The acc
+        // session is the authoritative signal; the user-model check
+        // covers the window before the session first resolves.
+        bottomNavigationBar: _isAccAgent(ref)
+            ? null
+            : Container(
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{network_name}} — تسجيل الدخول</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; min-height: 100vh;
+  display: flex; background: #fff; }
+.brand { flex: 1; min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 40px 24px;
+  background: linear-gradient(160deg, {{color_primary}} 0%, #0f172a 100%);
+  color: #fff; text-align: center; }
+.brand .logo { max-height: 70px; max-width: 160px; margin-bottom: 20px; }
+.brand h1 { font-size: 30px; font-weight: 800; }
+.brand .tag { color: rgba(255,255,255,.65); font-size: 14px; margin-top: 10px;
+  line-height: 1.8; max-width: 280px; }
+.brand .wifi-big { font-size: 54px; margin-bottom: 18px;
+  filter: drop-shadow(0 0 24px {{color_accent}}); }
+.speed { display: inline-block; margin-top: 22px; color: {{color_accent}};
+  border: 1px solid {{color_accent}}; border-radius: 999px; font-size: 12px;
+  font-weight: 700; padding: 5px 18px; }
+.speed:empty { display: none; }
+.pane { flex: 1; min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; padding: 40px 24px; }
+.form-box { width: 100%; max-width: 340px; }
+.form-box h2 { font-size: 22px; color: #0f172a; font-weight: 800; margin-bottom: 6px; }
+.form-box .hint { color: #64748b; font-size: 13px; margin-bottom: 24px; line-height: 1.7; }
+input[type=text], input[type=password] { width: 100%; padding: 15px 16px; margin-bottom: 13px;
+  border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px;
+  font-family: inherit; text-align: center; transition: border .15s; }
+input:focus { outline: none; border-color: {{color_accent}}; }
+button { width: 100%; padding: 15px; border: 0; border-radius: 12px;
+  background: {{color_primary}}; color: #fff; font-size: 16px; font-weight: 800;
+  font-family: inherit; cursor: pointer; transition: background .15s, transform .12s; }
+button:hover { background: {{color_accent}}; transform: translateY(-1px); }
+.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+  border-radius: 12px; padding: 11px; font-size: 13px; margin-bottom: 14px; }
+.trial { margin-top: 18px; font-size: 13px; color: #64748b; text-align: center; }
+.trial a { color: {{color_accent}}; font-weight: 800; text-decoration: none; }
+.foot { margin-top: 26px; font-size: 12px; color: #94a3b8; text-align: center; }
+.foot a { color: {{color_primary}}; font-weight: 700; text-decoration: none; }
+@media (max-width: 640px) {
+  body { flex-direction: column; }
+  .brand { min-height: auto; padding: 36px 20px 30px; }
+  .brand .wifi-big { font-size: 40px; margin-bottom: 10px; }
+  .brand h1 { font-size: 24px; }
+  .brand .tag { font-size: 12px; }
+  .pane { min-height: auto; padding: 30px 20px 40px; }
+}
+</style>
+</head>
+<body>
+$(if chap-id)
+<form name="sendin" action="$(link-login-only)" method="post">
+<input type="hidden" name="username" />
+<input type="hidden" name="password" />
+<input type="hidden" name="dst" value="$(link-orig)" />
+<input type="hidden" name="popup" value="true" />
+</form>
+<script type="text/javascript" src="md5.js"></script>
+<script type="text/javascript">
+function doLogin() {
+  document.sendin.username.value = document.login.username.value;
+  document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+  document.sendin.submit();
+  return false;
+}
+</script>
+$(endif)
+
+<div class="brand">
+  <div class="wifi-big">📡</div>
+  {{logo}}
+  <h1>{{network_name}}</h1>
+  <div class="tag">{{welcome_msg}}</div>
+  <div class="speed">⚡ {{speed_label}}</div>
+</div>
+<div class="pane">
+  <div class="form-box">
+    <h2>تسجيل الدخول</h2>
+    <div class="hint">أدخل بياناتك للاتصال بالشبكة</div>
+    $(if error)<div class="error">$(error)</div>$(endif)
+    <form name="login" action="$(link-login-only)" method="post"
+          $(if chap-id) onSubmit="return doLogin()" $(endif)>
+      <input type="hidden" name="dst" value="$(link-orig)" />
+      <input type="hidden" name="popup" value="true" />
+      <input name="username" type="text" value="$(username)" placeholder="اسم المستخدم / رقم الكرت" autocomplete="username" />
+      <input name="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+      <button type="submit">دخول</button>
+    </form>
+    $(if trial == 'yes')
+    <div class="trial"><a href="$(link-login-only)?dst=$(link-orig-esc)&amp;username=T-$(mac-esc)">دخول تجريبي مجاني ←</a></div>
+    $(endif)
+    <div class="foot">{{support_line}}</div>
+  </div>
+</div>
+</body>
+</html>

@@ -17,11 +17,16 @@ import os
 import time
 import random
 import datetime
+import hashlib
 
 HOST = "0.0.0.0"
 PORT = 8728
 USER = "dev"
 PASSWORD = "dev123"
+# --legacy : emulate RouterOS < 6.43 — /login replies with an =ret=
+# challenge and expects the MD5 challenge-response handshake.
+LEGACY = "--legacy" in sys.argv
+LEGACY_CHALLENGE = "0123456789abcdef0123456789abcdef"
 LOGFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        "routeros_cmd_log.txt")
 _loglock = threading.Lock()
@@ -399,6 +404,10 @@ RESOURCE = {
 
 IDENTITY = {"name": "SaiberTest-Router"}
 
+if LEGACY:
+    RESOURCE["version"] = "6.40.9 (long-term)"
+    IDENTITY["name"] = "SaiberTest-Router-v6"
+
 INTERFACES = [
     {".id": "*1", "name": "ether1", "type": "ether", "running": "true",
      "disabled": "false", "rx-byte": "88123456", "tx-byte": "44512321",
@@ -515,6 +524,20 @@ def handle(cmd_words, conn, logged_in, streams):
         send_sentence(conn, ["!done"])
 
     if cmd == "/login":
+        if LEGACY:
+            if "response" in params:
+                expected = "00" + hashlib.md5(
+                    b"\x00" + PASSWORD.encode()
+                    + bytes.fromhex(LEGACY_CHALLENGE)
+                ).hexdigest()
+                if params.get("name") == USER \
+                        and params["response"] == expected:
+                    finish()
+                    return True
+                trap("cannot log in")
+                return logged_in
+            finish(ret=LEGACY_CHALLENGE)
+            return logged_in
         if params.get("name") == USER and params.get("password") == PASSWORD:
             finish()
             return True
@@ -618,6 +641,26 @@ def handle(cmd_words, conn, logged_in, streams):
                 "time": str(random.randint(1, 60))}))
         finish(rows)
     elif cmd == "/tool/fetch":
+        dst = params.get("dst-path", "")
+        if dst:
+            # simulate the router saving the downloaded file to disk —
+            # create the file entry (and parent dir entry) in /file.
+            STATE["next_ids"].setdefault("files", 50)
+            existing = {f.get("name") for f in STATE["files"]}
+            parts = dst.split("/")
+            for i in range(1, len(parts)):
+                d = "/".join(parts[:i])
+                if d not in existing:
+                    STATE["files"].append({
+                        ".id": f"*D{len(STATE['files'])}",
+                        "name": d, "type": "directory"})
+            if dst not in existing:
+                STATE["files"].append({
+                    ".id": f"*F{len(STATE['files'])}",
+                    "name": dst,
+                    "type": ".js file" if dst.endswith(".js") else "file",
+                    "size": "4096",
+                    "creation-time": "nov/02/2026 00:00:00"})
         finish([row({"status": "finished", "duration": "1s",
                      "total-time": "1s", "downloaded": "1024",
                      "size": "1024",

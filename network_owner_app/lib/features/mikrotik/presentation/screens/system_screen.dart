@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/feature_keys.dart';
@@ -1189,14 +1190,29 @@ class _HotspotPagesTabState extends ConsumerState<_HotspotPagesTab> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.07),
+            color: AppColors.primary.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: AppColors.warning.withValues(alpha: 0.3)),
+                color: AppColors.primary.withValues(alpha: 0.3)),
           ),
-          child: const Text(
-            'رفع قوالب صفحات جاهزة (ZIP) يتطلب نقل ملفات عبر FTP — قيد التطوير. حالياً: ارفعها عبر Winbox/FTP ثم وجّه «مجلد الصفحات» إليها هنا',
-            style: TextStyle(fontSize: 11, color: AppColors.textGray),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'قوالب صفحات جاهزة بهوية شبكتك أصبحت متاحة — الراوتر يسحبها تلقائياً دون FTP',
+                style: TextStyle(fontSize: 11, color: AppColors.textGray),
+              ),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () => context.push('/mikrotik/hotspot-pages',
+                    extra: widget.router),
+                child: const Text('فتح متجر قوالب الصفحات ←',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary)),
+              ),
+            ],
           ),
         ),
       ],

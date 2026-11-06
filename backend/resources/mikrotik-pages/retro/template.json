@@ -1,0 +1,11 @@
+{
+  "id": "retro",
+  "name": "مرح — Retro",
+  "description": "ألوان مرحة وأشكال ملتصقة بأسلوب الستيكرات — يعجب الشباب والمقاهي",
+  "premium": false,
+  "defaults": {
+    "color_primary": "#f59e0b",
+    "color_accent": "#8b5cf6",
+    "welcome_msg": "هيّا بنا نتصل بالإنترنت!"
+  }
+}

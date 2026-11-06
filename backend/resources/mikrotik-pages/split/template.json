@@ -1,0 +1,11 @@
+{
+  "id": "split",
+  "name": "مقسّم — Split",
+  "description": "تخطيط مقسوم: جانب علامة ملوّن وجانب نموذج أبيض — مظهر مواقع عصرية",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#1e293b",
+    "color_accent": "#06b6d4",
+    "welcome_msg": "سجّل دخولك واستمتع بإنترنت سريع"
+  }
+}

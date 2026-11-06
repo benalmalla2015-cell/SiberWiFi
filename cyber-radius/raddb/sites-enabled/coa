@@ -1,0 +1,28 @@
+# -*- text -*-
+# =============================================================================
+# CyberNet — CoA / Disconnect-Request listener (UDP 3799)
+#
+# Inbound side only ACKs/NAKs requests from known clients (clients.conf).
+# Note: CoA to the NAS (MikroTik /radius incoming) is originated outbound
+# by radclient/backend tooling — this listener covers the reverse path
+# (host -> server) and keeps the published port honest.
+# =============================================================================
+
+server coa {
+
+listen {
+	type = coa
+	ipaddr = *
+	port = 3799
+}
+
+recv-coa {
+	suffix
+	ok
+}
+
+send-coa {
+	ok
+}
+
+}

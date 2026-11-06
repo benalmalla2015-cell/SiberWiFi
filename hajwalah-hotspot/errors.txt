@@ -1,0 +1,29 @@
+# ترجمة رسائل أخطاء MikroTik Hotspot — شبكة هجولة
+# الصيغة: رمز-الخطأ = الرسالة المعروضة للمستخدم
+
+internal-error = خطأ داخلي في النظام، يرجى المحاولة مرة أخرى
+config-error = خطأ في إعدادات الشبكة، تواصل مع الدعم الفني
+not-logged-in = لم يتم تسجيل دخولك بعد
+ippool-empty = نفدت العناوين المتاحة، حاول لاحقاً
+shutting-down = الخدمة متوقفة مؤقتاً للصيانة
+license-session-limit = تجاوز عدد الجلسات المسموح به للترخيص
+wrong-mac-username = هذا الجهاز غير مسجل لهذا الحساب
+chap-missing = متصفحك لا يدعم التشفير المطلوب — فعّل JavaScript
+invalid-username = اسم المستخدم غير صحيح
+authentication failed = بيانات الدخول غير صحيحة، تأكد من رقم الكرت أو كلمة المرور
+no valid profile = لا توجد باقة مفعّلة لهذا الحساب
+uptime limit = انتهت مدة الكرت — اشحن كرتاً جديداً
+traffic limit = انتهت باقة البيانات — اشحن كرتاً جديداً
+running out = أوشكت باقتك على الانتهاء
+session timeout = انتهت الجلسة، سجّل الدخول من جديد
+idle timeout = تم فصلك بسبب الخمول
+radius timeout = خادم التحقق لا يستجيب، حاول بعد قليل
+simultaneous session limit = الحساب مستخدم على جهاز آخر حالياً
+chap challenge missing = خطأ في التحقق المشفر، حدّث الصفحة وحاول مجدداً
+invalid calling station = هذا الجهاز غير مصرح له بالدخول
+trial traffic limit = انتهت بيانات التجربة المجانية
+trial uptime limit = انتهت مدة التجربة المجانية
+no more sessions are allowed for user = الحساب متصل بالفعل من جهاز آخر
+advertising is not yet due = الإعلان غير متاح حالياً
+user password is not valid = كلمة المرور غير صحيحة
+walled garden = هذه الصفحة غير متاحة قبل تسجيل الدخول

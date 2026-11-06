@@ -8,4 +8,11 @@ use Filament\Resources\Pages\ListRecords;
 class ListMikrotikSubscriptions extends ListRecords
 {
     protected static string $resource = MikrotikSubscriptionResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\CreateAction::make()->label('منح اشتراك'),
+        ];
+    }
 }

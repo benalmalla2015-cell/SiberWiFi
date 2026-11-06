@@ -1,0 +1,10 @@
+﻿{
+    "hosts":  {
+                  "almalla-v6-001":  {
+                                         "server_ip":  "200.141.8.191",
+                                         "secret_hint":  "xQpn...Z5IC",
+                                         "created":  "2026-11-04 08:53 UTC",
+                                         "rotated":  "2026-11-04 08:53 UTC"
+                                     }
+              }
+}

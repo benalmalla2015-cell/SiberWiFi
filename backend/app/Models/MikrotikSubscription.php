@@ -8,12 +8,14 @@ class MikrotikSubscription extends Model
 {
     protected $fillable = [
         'user_id', 'plan_id', 'status', 'starts_at', 'ends_at',
-        'payment_request_id',
+        'payment_request_id', 'granted_features', 'revoked_features',
     ];
 
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'granted_features' => 'array',
+        'revoked_features' => 'array',
     ];
 
     public function user() { return $this->belongsTo(User::class); }

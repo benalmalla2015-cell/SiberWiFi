@@ -1,0 +1,11 @@
+{
+  "id": "sakura",
+  "name": "ساكورا",
+  "description": "وردي رقيق بتفاصيل أنيقة وأشكال ناعمة — لمسة يابانية هادئة",
+  "premium": true,
+  "defaults": {
+    "color_primary": "#be185d",
+    "color_accent": "#f472b6",
+    "welcome_msg": "أهلاً بك — سجّل دخولك بلطف"
+  }
+}

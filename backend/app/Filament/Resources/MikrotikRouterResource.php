@@ -68,10 +68,10 @@ class MikrotikRouterResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('owner.name')->label('المالك')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('display_name')->label('الاسم')
-                    ->getStateUsing(fn($r) => $r->name ?: $r->identity ?: '—')
+                    ->getStateUsing(fn ($record) => $record->name ?: $record->identity ?: '—')
                     ->searchable(['name', 'identity']),
                 Tables\Columns\TextColumn::make('endpoint')->label('العنوان')
-                    ->getStateUsing(fn($r) => "{$r->host}:{$r->api_port}")
+                    ->getStateUsing(fn ($record) => "{$record->host}:{$record->api_port}")
                     ->searchable(['host']),
                 Tables\Columns\TextColumn::make('network.name')->label('الشبكة')->sortable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('board_name')->label('اللوحة')->placeholder('—'),
@@ -85,7 +85,7 @@ class MikrotikRouterResource extends Resource
                     ->relationship('owner', 'name'),
                 Tables\Filters\Filter::make('online')
                     ->label('نشط خلال 24 ساعة')
-                    ->query(fn($q) => $q->where('last_seen_at', '>=', now()->subDay())),
+                    ->query(fn ($query) => $query->where('last_seen_at', '>=', now()->subDay())),
             ])
             ->actions([
                 \Filament\Actions\EditAction::make()->label('تعديل'),
