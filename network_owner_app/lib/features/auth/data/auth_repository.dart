@@ -144,6 +144,25 @@ class AuthRepository {
     await HiveService.clearAll();
   }
 
+  /// The stored bearer token, if any (used on cold start to decide whether
+  /// a session restore is worth attempting).
+  Future<String?> token() => _api.getToken();
+
+  /// Lightweight session liveness probe used before forcing a logout on a
+  /// 401 — distinguishes a truly revoked token from a transient failure.
+  /// Returns true when the session is still valid OR when the check could
+  /// not be completed (network/server blip), false only on a real 401.
+  Future<bool> probeSession() async {
+    try {
+      final response = await _api.get('/auth/me');
+      return response.data['success'] == true;
+    } on DioException catch (e) {
+      return e.response?.statusCode != 401;
+    } catch (_) {
+      return true;
+    }
+  }
+
   Future<UserModel?> me() async {
     try {
       final response = await _api.get('/auth/me');

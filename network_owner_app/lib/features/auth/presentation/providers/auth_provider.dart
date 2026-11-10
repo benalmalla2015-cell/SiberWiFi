@@ -54,6 +54,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await _repo.logout();
         state = const AuthState(status: AuthStatus.unauthenticated, error: 'هذا الحساب ليس حساب صاحب شبكة');
       } else {
+        // No cached profile (first run, cleared data, or a Hive read
+        // failure on cold start). If a live token survived, restore the
+        // session from the server instead of bouncing to the login screen.
+        final token = await _repo.token();
+        if (token != null) {
+          final user = await _repo.me();
+          if (user != null &&
+              (user.isNetworkOwner || user.role == 'network_owner')) {
+            state = AuthState(status: AuthStatus.authenticated, user: user);
+            _syncFcmToken();
+            return;
+          }
+          if (user != null && await _repo.hasAccountingSession()) {
+            state = AuthState(status: AuthStatus.authenticated, user: user);
+            _syncFcmToken();
+            return;
+          }
+          if (user != null) await _repo.logout();
+        }
         state = const AuthState(status: AuthStatus.unauthenticated);
       }
     } catch (_) {

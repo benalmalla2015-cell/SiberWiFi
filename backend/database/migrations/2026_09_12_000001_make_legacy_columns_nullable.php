@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         if (Schema::hasColumn('daily_offers', 'category_id')) {
             DB::statement("ALTER TABLE daily_offers MODIFY category_id BIGINT UNSIGNED NULL");
         }

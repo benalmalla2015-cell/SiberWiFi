@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement(
             "ALTER TABLE wallet_logs MODIFY COLUMN type ENUM('credit','debit','cashback','referral_commission','refund','freeze','unfreeze','pending_topup','rejected_topup') NOT NULL"
         );

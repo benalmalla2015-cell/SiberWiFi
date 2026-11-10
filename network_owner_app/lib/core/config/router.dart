@@ -38,6 +38,8 @@ import '../../features/mikrotik/presentation/screens/remote_access_screen.dart';
 import '../../features/mikrotik/data/feature_keys.dart';
 import '../../features/mikrotik/presentation/widgets/feature_gate.dart';
 import '../../features/accounting/presentation/screens/acc_home_screen.dart';
+import '../../features/fiber_topup/presentation/screens/fiber_topup_screen.dart';
+
 import '../../features/accounting/providers/acc_providers.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/splash_screen.dart';
@@ -166,10 +168,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/fiber-topup',
-        builder: (context, state) => const ComingSoonScreen(
-          title: 'ط´ط­ظ† ط±طµظٹط¯ ظپط§ظٹط¨ط±',
-          icon: Icons.bolt_rounded,
-        ),
+        builder: (context, state) => const FiberTopupScreen(),
       ),
       GoRoute(
         path: '/starlink-topup',

@@ -24,7 +24,9 @@ return new class extends Migration
             }
         });
 
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN payment_method ENUM('wallet','cash','advance') NOT NULL DEFAULT 'wallet'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE transactions MODIFY COLUMN payment_method ENUM('wallet','cash','advance') NOT NULL DEFAULT 'wallet'");
+        }
     }
 
     public function down(): void

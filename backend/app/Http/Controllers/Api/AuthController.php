@@ -130,9 +130,15 @@ class AuthController extends Controller
         }
 
         // Sessions are scoped per app: logging in from the booster app must not
-        // revoke the customer app's token (and vice versa).
+        // revoke the customer app's token (and vice versa). Keep up to 3 live
+        // sessions per app — a new login must not kill sessions on the owner's
+        // other devices — while pruning anything older so dead tokens cannot
+        // accumulate forever.
         $tokenName = $request->header('X-App-Type') === 'booster_app' ? 'booster_app' : 'mobile_app';
-        $user->tokens()->where('name', $tokenName)->delete();
+        $keepIds = $user->tokens()->where('name', $tokenName)
+            ->latest('id')->limit(2)->pluck('id');
+        $user->tokens()->where('name', $tokenName)
+            ->whereNotIn('id', $keepIds)->delete();
         $token = $user->createToken($tokenName)->plainTextToken;
 
         if ($request->fcm_token) {

@@ -13,6 +13,7 @@ import 'core/api/api_client.dart';
 import 'core/config/app_config.dart';
 import 'core/config/router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'features/maintenance/presentation/providers/maintenance_mode_provider.dart';
@@ -265,13 +266,27 @@ class _SaiberWifiAppState extends ConsumerState<SaiberWifiApp>
     }
   }
 
-  /// The stored token was revoked (401) — e.g. the same account logged in on
-  /// another device, which deletes all previous tokens. Drop the dead session
-  /// and let the router send the user back to the login screen.
+  /// The stored token was rejected (401). A single transient 401 — a deploy
+  /// blip, a reused connection race, or a recycled worker — must not kill
+  /// the session, so we re-probe after a short delay and only log out when
+  /// the token is confirmed dead. The probe flag also prevents re-entry
+  /// when the probe call itself 401s.
+  bool _sessionProbeRunning = false;
+
   void _handleUnauthorized() {
-    if (_accountSuspended) return;
+    if (_accountSuspended || _sessionProbeRunning) return;
     if (ref.read(authProvider).status != AuthStatus.authenticated) return;
-    ref.read(authProvider.notifier).logout();
+    _sessionProbeRunning = true;
+    Future.delayed(const Duration(seconds: 2), () async {
+      try {
+        final alive = await ref.read(authRepositoryProvider).probeSession();
+        if (!alive && mounted) {
+          ref.read(authProvider.notifier).logout();
+        }
+      } finally {
+        _sessionProbeRunning = false;
+      }
+    });
   }
 
   @override

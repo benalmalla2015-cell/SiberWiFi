@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
@@ -66,7 +67,7 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _storage.read(key: AppConfig.tokenKey);
+          final token = await getToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -139,12 +140,51 @@ class ApiClient {
 
   Dio get dio => _dio;
 
-  Future<void> setToken(String token) =>
-      _storage.write(key: AppConfig.tokenKey, value: token);
+  /// The token is mirrored to SharedPreferences as a resilience backup:
+  /// on some devices flutter_secure_storage loses its data when the OS
+  /// kills the app, which forced users back to the login screen despite
+  /// a still-valid session. Reads heal the primary store on a miss.
+  static const _tokenBackupKey = 'auth_token_bak';
 
-  Future<void> clearToken() => _storage.delete(key: AppConfig.tokenKey);
+  Future<void> setToken(String token) async {
+    try {
+      await _storage.write(key: AppConfig.tokenKey, value: token);
+    } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenBackupKey, token);
+    } catch (_) {}
+  }
 
-  Future<String?> getToken() => _storage.read(key: AppConfig.tokenKey);
+  Future<void> clearToken() async {
+    try {
+      await _storage.delete(key: AppConfig.tokenKey);
+    } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenBackupKey);
+    } catch (_) {}
+  }
+
+  Future<String?> getToken() async {
+    String? token;
+    try {
+      token = await _storage.read(key: AppConfig.tokenKey);
+    } catch (_) {}
+    if (token != null && token.isNotEmpty) return token;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString(_tokenBackupKey);
+    } catch (_) {}
+    if (token != null && token.isNotEmpty) {
+      // Self-heal the primary store so subsequent requests stay fast.
+      try {
+        await _storage.write(key: AppConfig.tokenKey, value: token);
+      } catch (_) {}
+      return token;
+    }
+    return null;
+  }
 
   Future<Response> get(String path, {Map<String, dynamic>? params}) =>
       _dio.get(path, queryParameters: params);

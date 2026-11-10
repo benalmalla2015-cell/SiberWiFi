@@ -126,8 +126,9 @@ class TopupController extends Controller
     {
         $request->validate([
             'service' => 'required|string',
-            'amount' => 'required_without:units|numeric|min:1',
+            'amount' => 'required_without_all:units,package|numeric|min:1',
             'units' => 'nullable|numeric|min:1',
+            'package' => 'nullable|string',
         ]);
         $service = $this->service($request->service);
         if (!$service) return $this->fail('الخدمة غير متوفرة', 404);
